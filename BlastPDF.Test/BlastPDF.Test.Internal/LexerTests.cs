@@ -33,9 +33,24 @@ namespace BlastPDF.Test.Internal
             Lexer lexer = Lexer.FromString("\n");
 
             var token = lexer.GetNextToken();
+            var eof = lexer.GetNextToken();
 
             Assert.True(token.Type == TokenType.EOL, $"Expected TokenType.EOL and got TokenType.{token.Type}");
             Assert.True(token.Lexeme == "\n", $"Expected the lexeme '\n' but got the lexeme '{token.Lexeme}'");
+            Assert.True(eof.Type == TokenType.EOF, $"Expected TokenType.EOF and got TokenType.{eof.Type}");
+        }
+
+        [Fact]
+        public void CheckCarriageReturn()
+        {
+            Lexer lexer = Lexer.FromString("\r");
+
+            var token = lexer.GetNextToken();
+            var eof = lexer.GetNextToken();
+
+            Assert.True(token.Type == TokenType.EOL, $"Expected TokenType.EOL and got TokenType.{token.Type}");
+            Assert.True(token.Lexeme == "\r", $"Expected the lexeme '\n' but got the lexeme '{token.Lexeme}'");
+            Assert.True(eof.Type == TokenType.EOF, $"Expected TokenType.EOF and got TokenType.{eof.Type}");
         }
 
         [Fact]
