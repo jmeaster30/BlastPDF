@@ -3,7 +3,7 @@ namespace BlastPDF.Internal
 {
   public enum TokenType
   {
-    ERROR, EOF, EOL, WHITESPACE,
+    REGULAR, EOF, EOL, WHITESPACE,
     COMMENT, BOOLEAN, INTEGER, REAL,
     LITERAL, HEX, NAME, NULL,
     ARRAYOPEN, ARRAYCLOSE,
