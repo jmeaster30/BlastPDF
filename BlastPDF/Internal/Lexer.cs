@@ -1,44 +1,42 @@
 using System;
 using System.IO;
-using System.Reflection.Metadata;
 using System.Text;
-using System.Threading.Tasks.Dataflow;
 using BlastPDF.Internal.Helpers;
 
 namespace BlastPDF.Internal
 {
   public class Lexer : IDisposable
   {
-    private readonly Stream InputStream;
+    private readonly Stream _inputStream;
 
     public static Lexer FromFile(string filepath)
     {
-      return new Lexer(File.OpenRead(filepath));
+      return new(File.OpenRead(filepath));
     }
 
     public static Lexer FromString(string source)
     {
-      return new Lexer(new MemoryStream(Encoding.UTF8.GetBytes(source)));
+      return new(new MemoryStream(Encoding.UTF8.GetBytes(source)));
     }
 
     private Lexer(FileStream file)
     {
-      InputStream = file;
+      _inputStream = file;
     }
 
     private Lexer(MemoryStream source)
     {
-      InputStream = source;
+      _inputStream = source;
     }
 
     public Token GetNextToken()
     {
       //var currentPosition = InputStream.Position;
-      var currentByte = InputStream.ReadByte();
+      var currentByte = _inputStream.ReadByte();
 
-      if (currentByte < 0) return new Token(TokenType.EOF, "");
+      if (currentByte < 0) return new(TokenType.EOF, "");
 
-      TokenType type = TokenType.REGULAR;
+      var type = TokenType.REGULAR;
       var lexeme = "";
 
       if (currentByte is 0 or 9 or 12 or 32)
@@ -47,9 +45,7 @@ namespace BlastPDF.Internal
         // PDF treats any sequence of consecutive white-space characters as one character.
         type = TokenType.WHITESPACE;
         lexeme = lexeme.ConcatByte(currentByte);
-        lexeme = ConsumeWhile(lexeme, (int utfbyte) => {
-          return utfbyte is 0 or 9 or 12 or 32;
-        });
+        lexeme = ConsumeWhile(lexeme, (int utfByte) => utfByte is 0 or 9 or 12 or 32);
       }
       else if (currentByte is 10) // Line Feed
       {
@@ -63,14 +59,14 @@ namespace BlastPDF.Internal
         type = TokenType.EOL;
         lexeme = lexeme.ConcatByte(currentByte);
        
-        var nextByte = InputStream.ReadByte();
+        var nextByte = _inputStream.ReadByte();
         if (nextByte is 10)
         {
           lexeme = lexeme.ConcatByte(nextByte);
         }
         else if (nextByte is not -1)
         {
-          InputStream.Seek(-1, SeekOrigin.Current);
+          _inputStream.Seek(-1, SeekOrigin.Current);
         }
       }
       else if (currentByte is '%')
@@ -80,9 +76,7 @@ namespace BlastPDF.Internal
         // regular, delimiter, SPACE (20h), and HORZONTAL TAB characters (09h).
         type = TokenType.COMMENT;
         lexeme = lexeme.ConcatByte(currentByte);
-        lexeme = ConsumeUntil(lexeme, (int utfbyte) => {
-          return utfbyte is 10 or 13;
-        });
+        lexeme = ConsumeUntil(lexeme, (int utfByte) => utfByte is 10 or 13);
       }
       else if (currentByte is '/') // Name
       {
@@ -101,15 +95,13 @@ namespace BlastPDF.Internal
         */
         type = TokenType.NAME;
         lexeme = lexeme.ConcatByte(currentByte);
-        lexeme = ConsumeWhile(lexeme, (int utfbyte) => {
-          return (utfbyte is >= '!' and <= '~') && IsRegular(utfbyte);
-        });
+        lexeme = ConsumeWhile(lexeme, (int utfByte) => utfByte is >= '!' and <= '~' && IsRegular(utfByte));
       }
       else if (currentByte is '(') // string
       {
         /* PDF 32000-1:2008 Section 7.3.4.2
           A literal string shall be written as an arbitrary number of characters enclosed in parentheses. Any characters
-          may appear in a string except unbalanced parentheses (LEFT PARENHESIS (28h) and RIGHT
+          may appear in a string except unbalanced parentheses (LEFT PARENTHESIS (28h) and RIGHT
           PARENTHESIS (29h)) and the backslash (REVERSE SOLIDUS (5Ch)), which shall be treated specially as
           described in this sub-clause. Balanced pairs of parentheses within a string require no special treatment.
         */
@@ -117,7 +109,7 @@ namespace BlastPDF.Internal
         lexeme = lexeme.ConcatByte(currentByte);
         var depth = 0;
         var escape = false;
-        var nextByte = InputStream.ReadByte();
+        var nextByte = _inputStream.ReadByte();
         while (nextByte is not -1)
         {
           lexeme = lexeme.ConcatByte(nextByte);
@@ -145,7 +137,7 @@ namespace BlastPDF.Internal
           {
             escape = false;
           }
-          nextByte = InputStream.ReadByte();
+          nextByte = _inputStream.ReadByte();
         }
       }
       else if (currentByte == '<') // Hexadecimal Strings OR the start token of the dictionary
@@ -157,7 +149,7 @@ namespace BlastPDF.Internal
           THAN SIGN (3Eh)).
         */
         lexeme = lexeme.ConcatByte(currentByte);
-        var nextByte = InputStream.ReadByte();
+        var nextByte = _inputStream.ReadByte();
         if (nextByte is '<')
         {
           type = TokenType.DICTOPEN;
@@ -172,15 +164,15 @@ namespace BlastPDF.Internal
         {
           type = TokenType.HEX;
           lexeme = lexeme.ConcatByte(nextByte);
-          lexeme = ConsumeUntil(lexeme, (int utfbyte) => { return utfbyte is '>'; });
-          nextByte = InputStream.ReadByte(); // consume the > symbol
+          lexeme = ConsumeUntil(lexeme, (int utfByte) => utfByte is '>');
+          nextByte = _inputStream.ReadByte(); // consume the > symbol
           lexeme = lexeme.ConcatByte(nextByte);
         }
       }
       else if (currentByte == '>')
       {
         lexeme = lexeme.ConcatByte(currentByte);
-        var nextByte = InputStream.ReadByte();
+        var nextByte = _inputStream.ReadByte();
         if (nextByte is '>')
         {
           type = TokenType.DICTCLOSE;
@@ -193,14 +185,14 @@ namespace BlastPDF.Internal
       }
       else if (currentByte is '+' or '-') // numbers
       {
-        var point = false;
+        bool point;
         lexeme = lexeme.ConcatByte(currentByte);
-        var pos = InputStream.Position;
-        (lexeme, point) = ConsumeNumbers(lexeme, point);
-        if ((point && lexeme.Length == 2) || (!point && lexeme.Length == 1))
+        var pos = _inputStream.Position;
+        (lexeme, point) = ConsumeNumbers(lexeme, false);
+        if (point && lexeme.Length == 2 || !point && lexeme.Length == 1)
         {
-          InputStream.Seek(pos, SeekOrigin.Begin);
-          lexeme = lexeme.Substring(0, 1);
+          _inputStream.Seek(pos, SeekOrigin.Begin);
+          lexeme = lexeme[..1];
           type = TokenType.REGULAR;
         }
         else
@@ -216,9 +208,9 @@ namespace BlastPDF.Internal
       }
       else if (currentByte is >= '0' and <= '9') // numbers
       {
-        var point = false;
+        bool point;
         lexeme = lexeme.ConcatByte(currentByte);
-        (lexeme, point) = ConsumeNumbers(lexeme, point);
+        (lexeme, point) = ConsumeNumbers(lexeme, false);
         type = point ? TokenType.REAL : TokenType.INTEGER;
       }
       else // keywords and regular
@@ -231,7 +223,7 @@ namespace BlastPDF.Internal
 
     private (string, bool) ConsumeNumbers(string lexeme, bool point)
     {
-      var nextByte = InputStream.ReadByte();
+      var nextByte = _inputStream.ReadByte();
       while (nextByte != -1)
       {
         if (nextByte is >= '0' and <= '9')
@@ -245,17 +237,17 @@ namespace BlastPDF.Internal
         }
         else
         {
-          InputStream.Seek(-1, SeekOrigin.Current);
+          _inputStream.Seek(-1, SeekOrigin.Current);
           break;
         }
-        nextByte = InputStream.ReadByte();
+        nextByte = _inputStream.ReadByte();
       }
       return (lexeme, point);
     }
 
     private string ConsumeWhile(string lexeme, Func<int, bool> pred)
     {
-      var nextByte = InputStream.ReadByte();
+      var nextByte = _inputStream.ReadByte();
       while (nextByte is not -1)
       {
         if (pred(nextByte))
@@ -264,17 +256,17 @@ namespace BlastPDF.Internal
         }
         else
         {
-          InputStream.Seek(-1, SeekOrigin.Current);
+          _inputStream.Seek(-1, SeekOrigin.Current);
           break;
         }
-        nextByte = InputStream.ReadByte();
+        nextByte = _inputStream.ReadByte();
       }
       return lexeme;
     }
 
     private string ConsumeUntil(string lexeme, Func<int, bool> pred)
     {
-      return ConsumeWhile(lexeme, (int utfbyte) => { return !pred(utfbyte); });
+      return ConsumeWhile(lexeme, (int utfByte) => !pred(utfByte));
     }
 
     private static bool IsRegular(int character)
@@ -294,7 +286,7 @@ namespace BlastPDF.Internal
 
     public void Dispose()
     {
-      InputStream.Close();
+      _inputStream.Close();
       GC.SuppressFinalize(this);
     }
   }

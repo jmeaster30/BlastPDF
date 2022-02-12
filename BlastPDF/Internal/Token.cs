@@ -35,19 +35,19 @@ namespace BlastPDF.Internal
       };
     }
 
-    private static string ResolveName(string Lexeme)
+    private static string ResolveName(string lexeme)
     {
-      return Lexeme;
+      return lexeme;
     }
 
-    private static string ResolveHexString(string Lexeme)
+    private static string ResolveHexString(string lexeme)
     {
-      return Lexeme;
+      return lexeme;
     }
 
-    private static string ResolveLiteralString(string Lexeme)
+    private static string ResolveLiteralString(string lexeme)
     {
-      return Lexeme;
+      return lexeme;
     }
 
   }

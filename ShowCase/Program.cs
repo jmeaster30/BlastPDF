@@ -7,7 +7,7 @@ namespace ShowCase
   {
     static void Main(string[] args)
     {
-      Lexer lexer = Lexer.FromString("<BBAABBABAB>()");
+      var lexer = Lexer.FromString("<BBAABBABAB>()");
       var token = lexer.GetNextToken();
       while (token.Type != TokenType.EOF)
       {
