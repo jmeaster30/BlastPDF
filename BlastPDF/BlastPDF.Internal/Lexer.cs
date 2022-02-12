@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks.Dataflow;
 using BlastPDF.Internal.Helpers;
@@ -104,12 +105,152 @@ namespace BlastPDF.Internal
           return (utfbyte is >= '!' and <= '~') && IsRegular(utfbyte);
         });
       }
+      else if (currentByte is '(') // string
+      {
+        /* PDF 32000-1:2008 Section 7.3.4.2
+          A literal string shall be written as an arbitrary number of characters enclosed in parentheses. Any characters
+          may appear in a string except unbalanced parentheses (LEFT PARENHESIS (28h) and RIGHT
+          PARENTHESIS (29h)) and the backslash (REVERSE SOLIDUS (5Ch)), which shall be treated specially as
+          described in this sub-clause. Balanced pairs of parentheses within a string require no special treatment.
+        */
+        type = TokenType.LITERAL;
+        lexeme = lexeme.ConcatByte(currentByte);
+        var depth = 0;
+        var escape = false;
+        var nextByte = InputStream.ReadByte();
+        while (nextByte is not -1)
+        {
+          lexeme = lexeme.ConcatByte(nextByte);
+          if (nextByte is ')')
+          {
+            if (escape)
+              escape = false;
+            else if (depth == 0)
+              break;
+            else if (depth > 0)
+              depth -= 1;
+          }
+          else if (nextByte is '(')
+          {
+            if (escape)
+              escape = false;
+            else
+              depth += 1;
+          }
+          else if (nextByte is '\\')
+          {
+            escape = !escape;
+          }
+          else
+          {
+            escape = false;
+          }
+          nextByte = InputStream.ReadByte();
+        }
+      }
+      else if (currentByte == '<') // Hexadecimal Strings OR the start token of the dictionary
+      {
+        /* PDF 32000-1:2008 Section 7.3.4.3
+          Strings may also be written in hexadecimal form, which is useful for including arbitrary binary data in a PDF file.
+          A hexadecimal string shall be written as a sequence of hexadecimal digits (0–9 and either A–F or a–f) encoded
+          as ASCII characters and enclosed within angle brackets (using LESS-THAN SIGN (3Ch) and GREATER-
+          THAN SIGN (3Eh)).
+        */
+        lexeme = lexeme.ConcatByte(currentByte);
+        var nextByte = InputStream.ReadByte();
+        if (nextByte is '<')
+        {
+          type = TokenType.DICTOPEN;
+          lexeme = lexeme.ConcatByte(nextByte);
+        }
+        else if (nextByte is '>')
+        {
+          type = TokenType.HEX;
+          lexeme = lexeme.ConcatByte(nextByte);
+        }
+        else
+        {
+          type = TokenType.HEX;
+          lexeme = lexeme.ConcatByte(nextByte);
+          lexeme = ConsumeUntil(lexeme, (int utfbyte) => { return utfbyte is '>'; });
+          nextByte = InputStream.ReadByte(); // consume the > symbol
+          lexeme = lexeme.ConcatByte(nextByte);
+        }
+      }
+      else if (currentByte == '>')
+      {
+        lexeme = lexeme.ConcatByte(currentByte);
+        var nextByte = InputStream.ReadByte();
+        if (nextByte is '>')
+        {
+          type = TokenType.DICTCLOSE;
+          lexeme = lexeme.ConcatByte(nextByte);
+        }
+        else
+        {
+          // I don't think we can hit this actually 
+        }
+      }
+      else if (currentByte is '+' or '-') // numbers
+      {
+        var point = false;
+        lexeme = lexeme.ConcatByte(currentByte);
+        var pos = InputStream.Position;
+        (lexeme, point) = ConsumeNumbers(lexeme, point);
+        if ((point && lexeme.Length == 2) || (!point && lexeme.Length == 1))
+        {
+          InputStream.Seek(pos, SeekOrigin.Begin);
+          lexeme = lexeme.Substring(0, 1);
+          type = TokenType.REGULAR;
+        }
+        else
+        {
+          type = point ? TokenType.REAL : TokenType.INTEGER;
+        }
+      }
+      else if (currentByte is '.') // numbers
+      {
+        lexeme = lexeme.ConcatByte(currentByte);
+        (lexeme, _) = ConsumeNumbers(lexeme, true);
+        type = lexeme == "." ? TokenType.REGULAR : TokenType.REAL;
+      }
+      else if (currentByte is >= '0' and <= '9') // numbers
+      {
+        var point = false;
+        lexeme = lexeme.ConcatByte(currentByte);
+        (lexeme, point) = ConsumeNumbers(lexeme, point);
+        type = point ? TokenType.REAL : TokenType.INTEGER;
+      }
       else // keywords and regular
       {
 
       }
 
       return new Token(type, lexeme);
+    }
+
+    private (string, bool) ConsumeNumbers(string lexeme, bool point)
+    {
+      var nextByte = InputStream.ReadByte();
+      while (nextByte != -1)
+      {
+        if (nextByte is >= '0' and <= '9')
+        {
+          lexeme = lexeme.ConcatByte(nextByte);
+        }
+        else if (nextByte is '.' && !point)
+        {
+          lexeme = lexeme.ConcatByte(nextByte);
+          point = true;
+        }
+        else
+        {
+          InputStream.Seek(-1, SeekOrigin.Current);
+          break;
+        }
+        nextByte = InputStream.ReadByte();
+      }
+      return (lexeme, point);
     }
 
     private string ConsumeWhile(string lexeme, Func<int, bool> pred)

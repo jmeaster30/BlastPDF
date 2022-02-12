@@ -24,22 +24,29 @@ namespace BlastPDF.Internal
       ResolveTokenValue();
     }
 
-    private void ResolveTokenValue() {
-      ResolvedValue = Type switch {
+    private void ResolveTokenValue()
+    {
+      ResolvedValue = Type switch
+      {
         TokenType.NAME => ResolveName(Lexeme),
+        TokenType.HEX => ResolveHexString(Lexeme),
+        TokenType.LITERAL => ResolveLiteralString(Lexeme),
         _ => Lexeme,
       };
     }
 
-    private static string ResolveName(string Lexeme) {
+    private static string ResolveName(string Lexeme)
+    {
       return Lexeme;
     }
 
-    private static string ResolveHexString(string Lexeme) {
+    private static string ResolveHexString(string Lexeme)
+    {
       return Lexeme;
     }
 
-    private static string ResolveLiteralString(string Lexeme) {
+    private static string ResolveLiteralString(string Lexeme)
+    {
       return Lexeme;
     }
 
