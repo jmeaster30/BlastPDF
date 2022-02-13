@@ -7,11 +7,11 @@ namespace ShowCase
   {
     static void Main(string[] args)
     {
-      var lexer = Lexer.FromString("<BBAABBABAB>()");
+      var lexer = Lexer.FromString("<42 4f 4f 4253><3A29><404>");
       var token = lexer.GetNextToken();
       while (token.Type != TokenType.EOF)
       {
-        Console.WriteLine($"{token.Type} - '{token.Lexeme}'");
+        Console.WriteLine($"{token.Type} - '{token.Lexeme}' - '{token.ResolvedValue}'");
         token = lexer.GetNextToken();
       }
     }
