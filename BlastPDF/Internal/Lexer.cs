@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using BlastPDF.Internal.Helpers;
 
@@ -8,6 +10,20 @@ namespace BlastPDF.Internal
   public class Lexer : IDisposable
   {
     private readonly Stream _inputStream;
+
+    private static readonly Dictionary<string, TokenType> _keywords = new() {
+      {"true",      TokenType.BOOLEAN},
+      {"false",     TokenType.BOOLEAN},
+      {"null",      TokenType.NULL   },
+      {"obj",       TokenType.KEYWORD},
+      {"endobj",    TokenType.KEYWORD},
+      {"stream",    TokenType.KEYWORD},
+      {"endstream", TokenType.KEYWORD},
+      {"startxref", TokenType.KEYWORD},
+      {"xref",      TokenType.KEYWORD},
+      {"trailer",   TokenType.KEYWORD},
+      {"R",         TokenType.KEYWORD}
+    };
 
     public static Lexer FromFile(string filepath)
     {
@@ -38,6 +54,7 @@ namespace BlastPDF.Internal
 
       var type = TokenType.REGULAR;
       var lexeme = "";
+      var errorMessage = "";
 
       switch (currentByte)
       {
@@ -121,10 +138,10 @@ namespace BlastPDF.Internal
             {
               if (escape)
                 escape = false;
-              else if (depth == 0)
-                break;
-              else if (depth > 0)
+              else
                 depth -= 1;
+
+              if (depth < 0) break;
             }
             else switch (nextByte)
             {
@@ -142,6 +159,12 @@ namespace BlastPDF.Internal
                 break;
             }
             nextByte = _inputStream.ReadByte();
+          }
+
+          if (lexeme[^1..] is not ")" || depth >= 0)
+          {
+            type = TokenType.ERROR;
+            errorMessage = "Unclosed string";
           }
 
           break;
@@ -189,9 +212,10 @@ namespace BlastPDF.Internal
           }
           else
           {
-            // I don't think we can hit this actually 
+            // I don't think we can hit this actually
+            type = TokenType.ERROR;
+            lexeme = "Found the end of a hex string outside of a hex string.";
           }
-
           break;
         }
         // numbers
@@ -211,7 +235,6 @@ namespace BlastPDF.Internal
           {
             type = point ? TokenType.REAL : TokenType.INTEGER;
           }
-
           break;
         }
         // numbers
@@ -231,10 +254,44 @@ namespace BlastPDF.Internal
         }
         // keywords and regular
         default:
+          (lexeme, type) = ConsumeKeyword(currentByte);
           break;
       }
 
-      return new Token(type, lexeme);
+      return new Token(type, lexeme, errorMessage);
+    }
+
+    private bool IsNextString(string next)
+    {
+      var position = _inputStream.Position;
+      var result = true;
+      foreach (var c in next)
+      {
+        var nextByte = _inputStream.ReadByte();
+        if (c == nextByte) continue;
+        result = false;
+        break;
+      }
+      _inputStream.Seek(position, SeekOrigin.Begin);
+      return result;
+    }
+    
+    private (string, TokenType) ConsumeKeyword(int currentByte)
+    {
+      var type = TokenType.REGULAR;
+      var lexeme = "".ConcatByte(currentByte);
+
+      foreach (var key in _keywords.Keys.Where(x => x.StartsWith(lexeme)))
+      {
+        var leftover = key[1..];
+        if (!IsNextString(leftover)) continue;
+        lexeme += leftover;
+        type = _keywords[key];
+        _inputStream.Seek(leftover.Length, SeekOrigin.Current);
+        break;
+      }
+
+      return (lexeme, type);
     }
 
     private (string, bool) ConsumeNumbers(string lexeme, bool point)

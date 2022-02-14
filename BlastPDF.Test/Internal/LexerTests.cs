@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Xunit;
 using BlastPDF.Internal;
 
@@ -17,7 +18,7 @@ namespace BlastPDF.Test.Internal
             Assert.True(token.Type == type, $"Expected TokenType.{type} and got TokenType.{token.Type}");
             Assert.True(token.Lexeme == lexeme, $"Expected the lexeme '{lexeme}' but got the lexeme '{token.Lexeme}'");
         }
-        
+
         private static void CheckToken(Token token, TokenType type, string lexeme, string resolvedValue)
         {
             Assert.True(token.Type == type, $"Expected TokenType.{type} and got TokenType.{token.Type}");
@@ -30,7 +31,20 @@ namespace BlastPDF.Test.Internal
             Assert.True(token.Type == TokenType.ERROR, $"Expected TokenType.ERROR and got TokenType.{token.Type}");
             Assert.True(token.ErrorMessage == message, $"Expected the message '{message}' but got the message '{token.ErrorMessage}'");
         }
-        
+
+        private static void CheckTokens(Lexer lexer, IEnumerable<Token> tokens)
+        {
+            foreach (var expected in tokens)
+            {
+                var actual = lexer.GetNextToken();
+                CheckToken(expected, actual.Type, actual.Lexeme, actual.ResolvedValue);
+                if (actual.Type == TokenType.EOF)
+                {
+                    Assert.True(false, "Found EOF before the end of the expected tokens");
+                }
+            }
+        }
+
         [Fact]
         public void CheckEmptyStringEof()
         {
@@ -198,6 +212,32 @@ namespace BlastPDF.Test.Internal
             var lexer = Lexer.FromString("<&laskjdh>");
             var hex = lexer.GetNextToken();
             CheckError(hex, "Hex string contains invalid characters.");
+            CheckEOF(lexer);
+        }
+
+        [Fact]
+        public void Numbers()
+        {
+            var lexer = Lexer.FromString("+.12+-46 .43 8.3876 66 4.+ 0.0  -.23");
+            CheckTokens(lexer, new List<Token>
+            {
+                new(TokenType.REAL, "+.12"),
+                new(TokenType.REGULAR, "+"),
+                new(TokenType.INTEGER, "-46"),
+                new(TokenType.WHITESPACE, " "),
+                new(TokenType.REAL, ".43"),
+                new(TokenType.WHITESPACE, " "),
+                new(TokenType.REAL, "8.3876"),
+                new(TokenType.WHITESPACE, " "),
+                new(TokenType.INTEGER, "66"),
+                new(TokenType.WHITESPACE, " "),
+                new(TokenType.REAL, "4."),
+                new(TokenType.REGULAR, "+"),
+                new(TokenType.WHITESPACE, " "),
+                new(TokenType.REAL, "0.0"),
+                new(TokenType.WHITESPACE, "  "),
+                new(TokenType.REAL, "-.23")
+            });
             CheckEOF(lexer);
         }
     }

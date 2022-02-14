@@ -1,6 +1,8 @@
 
 using System;
+using System.Collections;
 using System.Linq;
+using System.Text;
 using BlastPDF.Internal.Helpers;
 
 namespace BlastPDF.Internal
@@ -11,9 +13,7 @@ namespace BlastPDF.Internal
     COMMENT, BOOLEAN, INTEGER, REAL,
     LITERAL, HEX, NAME, NULL,
     ARRAY_OPEN, ARRAY_CLOSE,
-    DICT_OPEN, DICT_CLOSE,
-    STREAM, END_STREAM,
-    OBJ, END_OBJ
+    DICT_OPEN, DICT_CLOSE, KEYWORD
   }
 
   public class Token
@@ -27,21 +27,11 @@ namespace BlastPDF.Internal
     {
     }
 
-    public Token(TokenType type, string lexeme) {
+    public Token(TokenType type, string lexeme, string errorMessage = "") {
       Type = type;
       Lexeme = lexeme;
+      ErrorMessage = errorMessage;
       ResolveTokenValue();
-    }
-
-    public static Token Error(string message)
-    {
-      Token token = new()
-      {
-        Type = TokenType.ERROR,
-        Lexeme = "",
-        ErrorMessage = message
-      };
-      return token;
     }
 
     private void ResolveTokenValue()
@@ -95,11 +85,7 @@ namespace BlastPDF.Internal
       else
       {
         resolved = resolved.Filter(IsHex);
-        if (resolved.Length % 2 == 1)
-        {
-          resolved += '0';
-        }
-
+        if (resolved.Length % 2 == 1) resolved += '0';
         resolved = resolved.Window(2, HexToChar);
       }
       return resolved;
@@ -107,7 +93,45 @@ namespace BlastPDF.Internal
 
     private static string ResolveLiteralString(string lexeme)
     {
-      return lexeme;
+      var resolved = new StringBuilder();
+      for(var i = 1; i < lexeme.Length - 1; i++)
+      {
+        if (lexeme[i] == '\\' && i < lexeme.Length - 2)
+        {
+          switch (lexeme[i + 1])
+          {
+            case 'n': resolved.Append('\n');
+              break;
+            case 'r': resolved.Append('\r');
+              break;
+            case 't': resolved.Append('\t');
+              break;
+            case 'b': resolved.Append('\b');
+              break;
+            case 'f': resolved.Append('\f');
+              break;
+            case '(': resolved.Append('(');
+              break;
+            case ')': resolved.Append(')');
+              break;
+            case '\\': resolved.Append('\\');
+              break;
+            case '\r':
+              if (i < lexeme.Length - 3 && lexeme[i + 2] == '\n') i += 1;
+              break;
+            case '\n':
+              break;
+            default: resolved.Append(lexeme[i + 1]);
+              break;
+          }
+          i += 1;
+        }
+        else
+        {
+          resolved.Append(lexeme[i]);
+        }
+      }
+      return resolved.ToString();
     }
 
     private static bool IsHex(char c) => c is >= '0' and <= '9' or >= 'A' and <= 'F' or >= 'a' and <= 'f';
