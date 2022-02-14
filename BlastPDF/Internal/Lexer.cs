@@ -11,20 +11,6 @@ namespace BlastPDF.Internal
   {
     private readonly Stream _inputStream;
 
-    private static readonly Dictionary<string, TokenType> _keywords = new() {
-      {"true",      TokenType.BOOLEAN},
-      {"false",     TokenType.BOOLEAN},
-      {"null",      TokenType.NULL   },
-      {"obj",       TokenType.KEYWORD},
-      {"endobj",    TokenType.KEYWORD},
-      {"stream",    TokenType.KEYWORD},
-      {"endstream", TokenType.KEYWORD},
-      {"startxref", TokenType.KEYWORD},
-      {"xref",      TokenType.KEYWORD},
-      {"trailer",   TokenType.KEYWORD},
-      {"R",         TokenType.KEYWORD}
-    };
-
     public static Lexer FromFile(string filepath)
     {
       return new Lexer(File.OpenRead(filepath));
@@ -52,7 +38,7 @@ namespace BlastPDF.Internal
 
       if (currentByte < 0) return new(TokenType.EOF, "");
 
-      var type = TokenType.REGULAR;
+      TokenType type;
       var lexeme = "";
       var errorMessage = "";
 
@@ -252,6 +238,14 @@ namespace BlastPDF.Internal
           type = point ? TokenType.REAL : TokenType.INTEGER;
           break;
         }
+        case '[':
+          lexeme = lexeme.ConcatByte(currentByte);
+          type = TokenType.ARRAY_OPEN;
+          break;
+        case ']':
+          lexeme = lexeme.ConcatByte(currentByte);
+          type = TokenType.ARRAY_CLOSE;
+          break;
         // keywords and regular
         default:
           (lexeme, type) = ConsumeKeyword(currentByte);
@@ -281,12 +275,12 @@ namespace BlastPDF.Internal
       var type = TokenType.REGULAR;
       var lexeme = "".ConcatByte(currentByte);
 
-      foreach (var key in _keywords.Keys.Where(x => x.StartsWith(lexeme)))
+      foreach (var key in KeywordsOperators.Values.Keys.Where(x => x.StartsWith(lexeme)))
       {
         var leftover = key[1..];
         if (!IsNextString(leftover)) continue;
         lexeme += leftover;
-        type = _keywords[key];
+        type = KeywordsOperators.Values[key];
         _inputStream.Seek(leftover.Length, SeekOrigin.Current);
         break;
       }
