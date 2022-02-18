@@ -1,15 +1,11 @@
 using System;
+using System.Linq;
 using System.Text;
 
 namespace BlastPDF.Internal.Helpers
 {
   public static class HelperExtensions
   {
-    public static string ConcatByte(this string str, int b)
-    {
-      return str + Encoding.UTF8.GetString(new[] { (byte)b });
-    }
-
     public static string Filter(this string str, Func<char, bool> filterFunc)
     {
       var sb = new StringBuilder();
@@ -23,7 +19,7 @@ namespace BlastPDF.Internal.Helpers
     public static string Window(this string str, int size, Func<string, string> func)
     {
       var sb = new StringBuilder();
-      int idx = 0;
+      var idx = 0;
       while (idx < str.Length)
       {
         var window = str[idx..(idx + size)];
@@ -31,6 +27,11 @@ namespace BlastPDF.Internal.Helpers
         idx += size;
       }
       return sb.ToString();
+    }
+
+    public static int IndexOf(this string str, Func<char, bool> func)
+    {
+      return str.TakeWhile(c => !func(c)).Count();
     }
   }
 }
