@@ -8,12 +8,14 @@ namespace BlastPDF.Test.Internal
     {
         private static void CheckEOF(Lexer lexer)
         {
-            var token = lexer.GetNextToken();
+            var token = lexer.GetToken();
             Assert.True(token.Type == TokenType.EOF, $"Expected TokenType.EOF and got TokenType.{token.Type}");
         }
         
-        private static void CheckToken(Token token, TokenType type, string lexeme)
+        private static void CheckToken(Lexer lexer, TokenType type, string lexeme)
         {
+            var token = lexer.GetToken();
+            lexer.ConsumeToken();
             Assert.True(token.Type == type, $"Expected TokenType.{type} and got TokenType.{token.Type}");
             Assert.True(token.Lexeme == lexeme, $"Expected the lexeme '{lexeme}' but got the lexeme '{token.Lexeme}'");
         }
@@ -23,17 +25,17 @@ namespace BlastPDF.Test.Internal
         {
             var lexer = Lexer.FromString("a/%1s  \r\nwo");
             
-            CheckToken(lexer.GetNextToken(), TokenType.REGULAR, "a");
-            CheckToken(lexer.GetNextToken(), TokenType.DELIMITER, "/");
-            CheckToken(lexer.GetNextToken(), TokenType.DELIMITER, "%");
-            CheckToken(lexer.GetNextToken(), TokenType.REGULAR, "1");
-            CheckToken(lexer.GetNextToken(), TokenType.REGULAR, "s");
-            CheckToken(lexer.GetNextToken(), TokenType.WHITESPACE, " ");
-            CheckToken(lexer.GetNextToken(), TokenType.WHITESPACE, " ");
-            CheckToken(lexer.GetNextToken(), TokenType.WHITESPACE, "\r");
-            CheckToken(lexer.GetNextToken(), TokenType.WHITESPACE, "\n");
-            CheckToken(lexer.GetNextToken(), TokenType.REGULAR, "w");
-            CheckToken(lexer.GetNextToken(), TokenType.REGULAR, "o");
+            CheckToken(lexer, TokenType.REGULAR, "a");
+            CheckToken(lexer, TokenType.DELIMITER, "/");
+            CheckToken(lexer, TokenType.DELIMITER, "%");
+            CheckToken(lexer, TokenType.REGULAR, "1");
+            CheckToken(lexer, TokenType.REGULAR, "s");
+            CheckToken(lexer, TokenType.WHITESPACE, " ");
+            CheckToken(lexer, TokenType.WHITESPACE, " ");
+            CheckToken(lexer, TokenType.WHITESPACE, "\r");
+            CheckToken(lexer, TokenType.WHITESPACE, "\n");
+            CheckToken(lexer, TokenType.REGULAR, "w");
+            CheckToken(lexer, TokenType.REGULAR, "o");
             CheckEOF(lexer);
         }
     }

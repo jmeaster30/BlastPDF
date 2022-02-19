@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,7 @@ namespace BlastPDF.Internal
   public class Lexer : IDisposable
   {
     private readonly Stream _inputStream;
+    private Token CurrentToken { get; set; }
 
     public static Lexer FromFile(string filepath)
     {
@@ -30,8 +32,10 @@ namespace BlastPDF.Internal
       _inputStream = source;
     }
 
-    public Token GetNextToken()
+    public Token GetToken()
     {
+      if (CurrentToken != null) return CurrentToken; 
+      
       var currentByte = _inputStream.ReadByte();
 
       if (currentByte < 0) return new(TokenType.EOF, "");
@@ -55,22 +59,38 @@ namespace BlastPDF.Internal
           break;
       }
 
-      return new Token(type, lexeme);
+      CurrentToken = new Token(type, lexeme);
+      return CurrentToken;
     }
 
-    private static bool IsRegular(int character)
+    public void ConsumeToken()
     {
-      return !IsDelimiter(character) && !IsWhitespace(character);
+      CurrentToken = null;
     }
 
-    private static bool IsDelimiter(int character)
+    public IEnumerable<Token> TryGetTokens(string match)
     {
-      return character is 40 or 41 or 60 or 62 or 91 or 93 or 123 or 125 or 47 or 37;
-    }
+      var found = new List<Token>();
 
-    private static bool IsWhitespace(int character)
-    {
-      return character is 0 or 9 or 10 or 12 or 13 or 32;
+      foreach (var c in match)
+      {
+        var token = GetToken();
+        if (token.Lexeme == Char.ToString(c)) {
+          found.Add(token);
+        } else {
+          break;
+        }
+        ConsumeToken();
+      }
+
+      if (found.Count == match.Length) return found;
+      
+      _inputStream.Seek(-1 * (found.Count + 1), SeekOrigin.Current);
+      CurrentToken = null;
+      GetToken();
+      found.Clear();
+
+      return found;
     }
 
     public void Dispose()

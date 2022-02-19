@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using BlastPDF.Internal;
+using BlastPDF.Internal.Structure;
 
 namespace ShowCase
 {
@@ -7,13 +9,11 @@ namespace ShowCase
   {
     static void Main(string[] args)
     {
-      var lexer = Lexer.FromString("(oh yeah \\073^\\51)");
-      var token = lexer.GetNextToken();
-      while (token.Type != TokenType.EOF)
-      {
-        Console.WriteLine($"{token.Type} - '{token.Lexeme}'");
-        token = lexer.GetNextToken();
-      }
+      var lexer = Lexer.FromString("(wow \\102\\117\\117\\102\\111\\105\\123)");
+      var parser = new Parser(lexer);
+      var literal = parser.ParseLiteralString();
+      
+      Console.WriteLine($"{literal.ObjectType} - '{literal.StringValue}' - '{literal.ResolvedValue}'");
     }
   }
 }

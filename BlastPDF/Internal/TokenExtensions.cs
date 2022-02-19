@@ -75,15 +75,11 @@ public static class TokenExtensions
     {
         var resolved = lexeme[1..^1];
         if (!resolved.All(x => IsHex(x) || char.IsWhiteSpace(x)))
-        {
             throw new PdfParseException($"This hex string <{lexeme}> contains invalid characters. Allowed characters are whitespace, 0-9, a-f, and A-F");
-        }
-        else
-        {
-            resolved = resolved.Filter(IsHex);
-            if (resolved.Length % 2 == 1) resolved += '0';
-            resolved = resolved.Window(2, HexToChar);
-        }
+
+        resolved = resolved.Filter(IsHex); 
+        if (resolved.Length % 2 == 1) resolved += '0';
+        resolved = resolved.Window(2, HexToChar);
         return resolved;
     }
 

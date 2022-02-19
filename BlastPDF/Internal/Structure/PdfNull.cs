@@ -2,10 +2,15 @@ namespace BlastPDF.Internal.Structure;
 
 public class PdfNull : PdfObject
 {
-    public Token Null { get; set; }
+    public string Null { get; set; }
 
-    public PdfNull(Token token) : base(PdfObjectType.NULL)
+    public PdfNull() : base(PdfObjectType.NULL)
     {
-        Null = token;
+        Null = "null";
+    }
+
+    public PdfNull(string value) : base(PdfObjectType.NULL)
+    {
+        Null = value;
     }
 }
