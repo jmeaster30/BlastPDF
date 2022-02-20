@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using BlastPDF.Internal.Helpers;
 
 namespace BlastPDF.Internal
 {
@@ -38,23 +36,23 @@ namespace BlastPDF.Internal
       
       var currentByte = _inputStream.ReadByte();
 
-      if (currentByte < 0) return new(TokenType.EOF, "");
+      if (currentByte < 0) return new(TokenType.EOF, ' ');
 
       TokenType type;
-      var lexeme = "";
+      char lexeme;
       
       switch (currentByte)
       {
         case '(' or ')' or '<' or '>' or '[' or ']' or '{' or '}' or '/' or '%':
           type = TokenType.DELIMITER;
-          lexeme = BPH.ByteNumToString(currentByte);
+          lexeme = (char)currentByte;
           break;
         case 0 or 9 or 10 or 12 or 13 or 32:
           type = TokenType.WHITESPACE;
-          lexeme = BPH.ByteNumToString(currentByte);
+          lexeme = (char)currentByte;
           break;
         default:
-          lexeme = BPH.ByteNumToString(currentByte); 
+          lexeme = (char)currentByte; 
           type = TokenType.REGULAR;
           break;
       }
@@ -68,6 +66,12 @@ namespace BlastPDF.Internal
       CurrentToken = null;
     }
 
+    public void UngetToken(int num = 1)
+    {
+      CurrentToken = null;
+      _inputStream.Seek(-1 * num, SeekOrigin.Current);
+    }
+
     public IEnumerable<Token> TryGetTokens(string match)
     {
       var found = new List<Token>();
@@ -75,7 +79,7 @@ namespace BlastPDF.Internal
       foreach (var c in match)
       {
         var token = GetToken();
-        if (token.Lexeme == Char.ToString(c)) {
+        if (token.Lexeme == c) {
           found.Add(token);
         } else {
           break;

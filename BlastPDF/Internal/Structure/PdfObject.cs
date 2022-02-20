@@ -1,3 +1,5 @@
+using System;
+
 namespace BlastPDF.Internal.Structure;
 
 public class PdfObject
@@ -8,5 +10,9 @@ public class PdfObject
     {
         ObjectType = objType;
     }
-    
+
+    public virtual void Print()
+    {
+        Console.WriteLine($"PDF OBJECT : {ObjectType}");
+    }
 }

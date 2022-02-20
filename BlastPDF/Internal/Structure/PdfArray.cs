@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace BlastPDF.Internal.Structure;
@@ -9,5 +10,16 @@ public class PdfArray : PdfObject
     public PdfArray(IEnumerable<PdfObject> elements) : base(PdfObjectType.ARRAY)
     {
         Elements = elements;
+    }
+
+    public override void Print()
+    {
+        Console.WriteLine("PDF OBJECT : ARRAY");
+        Console.WriteLine("START ARRAY");
+        foreach (var element in Elements)
+        {
+            element.Print();
+        }
+        Console.WriteLine("END ARRAY");
     }
 }

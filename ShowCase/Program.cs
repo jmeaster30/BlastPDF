@@ -9,11 +9,11 @@ namespace ShowCase
   {
     static void Main(string[] args)
     {
-      var lexer = Lexer.FromString("(wow \\102\\117\\117\\102\\111\\105\\123)");
+      var lexer = Lexer.FromString("   [ 500 (oh yeah) /name <B00B1E> true null \n\n[    (test) 123 ] ] ");
       var parser = new Parser(lexer);
-      var literal = parser.ParseLiteralString();
+      var literal = parser.ParseObject();
       
-      Console.WriteLine($"{literal.ObjectType} - '{literal.StringValue}' - '{literal.ResolvedValue}'");
+      literal.Print();
     }
   }
 }

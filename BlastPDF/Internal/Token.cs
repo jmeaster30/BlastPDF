@@ -8,10 +8,9 @@ namespace BlastPDF.Internal
   public class Token
   {
     public TokenType Type { get; }
-    public string Lexeme { get; }
+    public char Lexeme { get; }
     
-
-    public Token(TokenType type, string lexeme) {
+    public Token(TokenType type, char lexeme) {
       Type = type;
       Lexeme = lexeme;
     }
