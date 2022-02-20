@@ -63,6 +63,8 @@ namespace BlastPDF.Internal
 
     public void ConsumeToken()
     {
+      if (CurrentToken == null)
+        GetToken();
       CurrentToken = null;
     }
 

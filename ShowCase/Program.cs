@@ -9,7 +9,15 @@ namespace ShowCase
   {
     static void Main(string[] args)
     {
-      var lexer = Lexer.FromString("   [ 500 (oh yeah) /name <B00B1E> true null \n\n[    (test) 123 ] ] ");
+      var lexer = Lexer.FromString(@"
+[ <b00b> 
+  <<
+/TEST (value)
+/Length <<
+  /Butt /Stuff
+>>
+>> <dead> ]
+");
       var parser = new Parser(lexer);
       var literal = parser.ParseObject();
       

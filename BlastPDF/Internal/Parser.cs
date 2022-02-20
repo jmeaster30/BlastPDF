@@ -38,7 +38,7 @@ namespace BlastPDF.Internal
           case '(':
             return ParseLiteralString();
           case '<':
-            return ParseHexString(); // need to change
+            return ParseHexOrDictionary();
           case '[':
             return ParseArray();
           default:
@@ -316,7 +316,7 @@ namespace BlastPDF.Internal
           endArray = true;
           break;
         }
-        
+
         values.Add(ParseObject());
         ParseOptionalWhiteSpace();
         token = lexer.GetToken();
@@ -326,6 +326,47 @@ namespace BlastPDF.Internal
         throw new PdfParseException("Unclosed array!!");
 
       return new PdfArray(values);
+    }
+
+    public PdfDictionary ParseDictionary()
+    {
+      var dictionary = new Dictionary<PdfName, PdfObject>();
+      var foundEnd = false;
+      var start = lexer.TryGetTokens("<<");
+      if (!start.Any()) throw new PdfParseException($"Expected to find << but only found '{lexer.GetToken()}'");
+
+      var token = lexer.GetToken();
+      while (token.Type is not TokenType.EOF)
+      {
+        if (token.Lexeme == '>')
+        {
+          lexer.ConsumeToken();
+          lexer.ConsumeToken();
+          foundEnd = true;
+          break;
+        }
+
+        ParseOptionalWhiteSpace();
+        var name = ParseName();
+        ParseOptionalWhiteSpace();
+        var value = ParseObject();
+        ParseOptionalWhiteSpace();
+        dictionary.Add(name, value);
+        token = lexer.GetToken();
+      }
+
+      if (!foundEnd)
+        throw new PdfParseException($"Unclosed dictionary!!!!");
+
+      return new PdfDictionary(dictionary);
+    }
+
+    public PdfObject ParseHexOrDictionary()
+    {
+      var tokens = lexer.TryGetTokens("<<");
+      if (!tokens.Any()) return ParseHexString();
+      lexer.UngetToken(tokens.Count());
+      return ParseDictionary();
     }
   }
 }
