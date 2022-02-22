@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using BlastPDF.Internal.Exceptions;
 
-namespace BlastPDF.Internal.Structure;
+namespace BlastPDF.Internal.Structure.Objects;
 
 public class PdfName : PdfObject
 {

@@ -1,6 +1,4 @@
-using System;
-
-namespace BlastPDF.Internal.Structure;
+namespace BlastPDF.Internal.Structure.Objects;
 
 public class PdfObject : PdfNode
 {

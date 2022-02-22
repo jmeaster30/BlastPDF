@@ -1,9 +1,7 @@
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using BlastPDF.Internal.Exceptions;
-using BlastPDF.Internal.Structure;
+using BlastPDF.Internal.Structure.Objects;
 
 namespace BlastPDF.Internal
 {

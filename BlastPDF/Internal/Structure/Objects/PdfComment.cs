@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace BlastPDF.Internal.Structure;
+namespace BlastPDF.Internal.Structure.Objects;
 
 public class PdfComment : PdfObject
 {

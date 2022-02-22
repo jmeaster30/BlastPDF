@@ -1,10 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using BlastPDF.Internal.Exceptions;
 using BlastPDF.Internal.Helpers;
 
-namespace BlastPDF.Internal.Structure;
+namespace BlastPDF.Internal.Structure.Objects;
 
 public class PdfHexString : PdfObject
 {

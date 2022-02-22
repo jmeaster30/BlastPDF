@@ -1,4 +1,4 @@
-namespace BlastPDF.Internal.Structure;
+namespace BlastPDF.Internal.Structure.Objects;
 
 public enum PdfNodeType
 {

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace BlastPDF.Internal.Structure;
+namespace BlastPDF.Internal.Structure.Objects;
 
 public class PdfStreamContent
 {

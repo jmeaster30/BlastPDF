@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using BlastPDF.Internal.Helpers;
 
-namespace BlastPDF.Internal.Structure;
+namespace BlastPDF.Internal.Structure.Objects;
 
 public class PdfLiteralString : PdfObject
 {
