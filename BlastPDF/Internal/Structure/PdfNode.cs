@@ -13,6 +13,6 @@ public class PdfNode
     
     public virtual void Print()
     {
-        throw new NotImplementedException($"{NodeType} print not implemented.");
+        Console.WriteLine($"WHOOPS :: {NodeType} print not implemented.");
     }
 }
