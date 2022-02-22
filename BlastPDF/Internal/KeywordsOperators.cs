@@ -4,8 +4,8 @@ namespace BlastPDF.Internal
 {
     public static class KeywordsOperators
     {
-        public static Dictionary<string, TokenType> Values { get; } = new();
-        /*{
+        public static Dictionary<string, TokenType> Values { get; } = new()
+        {
             //BASE
             {"true", TokenType.BOOLEAN},
             {"false", TokenType.BOOLEAN},
@@ -20,6 +20,6 @@ namespace BlastPDF.Internal
             {"xref", TokenType.KEYWORD},
             {"trailer", TokenType.KEYWORD},
             {"R", TokenType.KEYWORD}
-        };*/
+        };
     }
 }

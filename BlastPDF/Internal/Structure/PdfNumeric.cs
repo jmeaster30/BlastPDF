@@ -8,23 +8,16 @@ namespace BlastPDF.Internal.Structure;
 public class PdfNumeric : PdfObject
 {
     public bool IsReal { get; set; }
-    public string Numeric { get; set; }
+    public Token Numeric { get; set; }
 
-    public PdfNumeric(int num) : base(PdfObjectType.NUMERIC)
+    public PdfNumeric(Token numeric) : base(PdfNodeType.NUMERIC)
     {
-        Numeric = num.ToString();
-        IsReal = false;
+        Numeric = numeric;
+        IsReal = Numeric.Type == TokenType.REAL;
     }
 
-    public PdfNumeric(double num) : base(PdfObjectType.NUMERIC)
+    public override void Print()
     {
-        Numeric = num.ToString(CultureInfo.InvariantCulture);
-        IsReal = true;
-    }
-    
-    public PdfNumeric(IEnumerable<Token> numeric, bool isReal) : base(PdfObjectType.NUMERIC)
-    {
-        Numeric = string.Join("", numeric.Select(x => x.Lexeme));
-        IsReal = isReal;
+        Console.Write(Numeric);
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -5,15 +6,15 @@ namespace BlastPDF.Internal.Structure;
 
 public class PdfComment : PdfObject
 {
-    public string Comment { get; set; }
+    public Token Comment { get; set; }
 
-    public PdfComment(string comment) : base(PdfObjectType.COMMENT)
+    public PdfComment(Token comment) : base(PdfNodeType.COMMENT)
     {
-        Comment = $"%{comment}";
+        Comment = comment;
     }
 
-    public PdfComment(IEnumerable<Token> comment) : base(PdfObjectType.COMMENT)
+    public override void Print()
     {
-        Comment = string.Join("", comment.Select(x => x.Lexeme));
+        Console.WriteLine(Comment.Lexeme);
     }
 }

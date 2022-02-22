@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using BlastPDF.Internal;
-using BlastPDF.Internal.Structure;
+﻿using BlastPDF.Internal;
 
 namespace ShowCase
 {

@@ -1,16 +1,18 @@
+using System;
+
 namespace BlastPDF.Internal.Structure;
 
 public class PdfNull : PdfObject
 {
-    public string Null { get; set; }
+    public Token Token { get; set; }
 
-    public PdfNull() : base(PdfObjectType.NULL)
+    public PdfNull(Token value) : base(PdfNodeType.NULL)
     {
-        Null = "null";
+        Token = value;
     }
 
-    public PdfNull(string value) : base(PdfObjectType.NULL)
+    public override void Print()
     {
-        Null = value;
+        Console.Write(Token.Lexeme);
     }
 }

@@ -6,6 +6,11 @@ namespace BlastPDF.Internal.Helpers
 {
   public static class HelperExtensions
   {
+    public static string ConcatByte(this string lexeme, int value)
+    {
+      return $"{lexeme}{Encoding.UTF8.GetString(new[] { (byte)value })}";
+    }
+    
     public static string Filter(this string str, Func<char, bool> filterFunc)
     {
       var sb = new StringBuilder();

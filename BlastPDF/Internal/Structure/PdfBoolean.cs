@@ -1,15 +1,20 @@
+using System;
+
 namespace BlastPDF.Internal.Structure;
 
 public class PdfBoolean : PdfObject
 {
-    public string Boolean { get; set; }
-
-    public PdfBoolean(bool value) : base(PdfObjectType.BOOLEAN)
+    public Token Token { get; set; }
+    public bool Value { get; set; }
+    
+    public PdfBoolean(Token token) : base(PdfNodeType.BOOLEAN)
     {
-        Boolean = value ? "true" : "false";
+        Token = token;
+        Value = token.Lexeme == "true";
     }
-    public PdfBoolean(string boolean) : base(PdfObjectType.BOOLEAN)
+
+    public override void Print()
     {
-        Boolean = boolean;
+        Console.Write(Value);
     }
 }
