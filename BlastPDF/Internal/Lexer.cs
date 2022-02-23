@@ -227,6 +227,14 @@ namespace BlastPDF.Internal
       return CurrentToken;
     }
 
+    public Token GetStreamToken()
+    {
+      var lexeme = new StringBuilder();
+
+      CurrentToken = new Token(TokenType.STREAM_CONTENT, lexeme.ToString());
+      return CurrentToken;
+    }
+
     public void ConsumeToken()
     {
       if (CurrentToken == null)

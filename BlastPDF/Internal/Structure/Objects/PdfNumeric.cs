@@ -10,14 +10,14 @@ public class PdfNumeric : PdfObject
     public bool IsReal { get; set; }
     public Token Numeric { get; set; }
 
-    public PdfNumeric(Token numeric) : base(PdfNodeType.NUMERIC)
+    public PdfNumeric(Token numeric) : base(PdfObjectType.NUMERIC)
     {
         Numeric = numeric;
         IsReal = Numeric.Type == TokenType.REAL;
     }
-
+    
     public override void Print()
     {
-        Console.Write(Numeric);
+        Console.Write(Numeric.Lexeme);
     }
 }

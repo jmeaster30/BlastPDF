@@ -8,7 +8,7 @@ public class PdfComment : PdfObject
 {
     public Token Comment { get; set; }
 
-    public PdfComment(Token comment) : base(PdfNodeType.COMMENT)
+    public PdfComment(Token comment) : base(PdfObjectType.COMMENT)
     {
         Comment = comment;
     }

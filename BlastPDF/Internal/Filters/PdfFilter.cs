@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using BlastPDF.Internal.Structure;
+using BlastPDF.Internal.Structure.Objects;
 
 namespace BlastPDF.Internal.Filters;
 

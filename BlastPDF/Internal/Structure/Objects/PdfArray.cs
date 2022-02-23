@@ -7,7 +7,7 @@ public class PdfArray : PdfObject
 {
     public IEnumerable<PdfObject> Elements { get; set; }
 
-    public PdfArray(IEnumerable<PdfObject> elements) : base(PdfNodeType.ARRAY)
+    public PdfArray(IEnumerable<PdfObject> elements) : base(PdfObjectType.ARRAY)
     {
         Elements = elements;
     }

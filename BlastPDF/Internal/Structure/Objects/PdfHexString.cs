@@ -10,7 +10,7 @@ public class PdfHexString : PdfObject
     public Token Token { get; set; }
     public string Value { get; set; }
 
-    public PdfHexString(Token value) : base(PdfNodeType.HEX_STRING)
+    public PdfHexString(Token value) : base(PdfObjectType.HEX_STRING)
     {
         Token = value;
         Value = ResolveHexString(Token.Lexeme);

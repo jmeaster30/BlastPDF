@@ -6,7 +6,7 @@ public class PdfIndirectObject : PdfObject
     public PdfNumeric GenerationNumber { get; set; }
     public PdfObject Value { get; set; }
 
-    public PdfIndirectObject(PdfNumeric objNum, PdfNumeric genNum, PdfObject value) : base(PdfNodeType.INDIRECT_OBJ)
+    public PdfIndirectObject(PdfNumeric objNum, PdfNumeric genNum, PdfObject value) : base(PdfObjectType.INDIRECT_OBJ)
     {
         ObjectNumber = objNum;
         GenerationNumber = genNum;

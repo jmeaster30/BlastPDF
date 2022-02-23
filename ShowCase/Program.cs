@@ -6,19 +6,14 @@ namespace ShowCase
   {
     static void Main(string[] args)
     {
-      var lexer = Lexer.FromString(@"
-[ <b00b> 
-  <<
-/TEST (value)
-/Length <<
-  /Butt /Stuff
->>
->> <dead> ]
-");
+      var lexer = Lexer.FromString("[ [ <b00b> /myname <dead> 1234 69] (yeah baby)    ");
       var parser = new Parser(lexer);
-      var literal = parser.ParseObject();
+      var objs = parser.Parse();
       
-      literal.Print();
+      foreach (var node in objs)
+      {
+        node.Print();
+      }
     }
   }
 }

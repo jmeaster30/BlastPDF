@@ -11,7 +11,7 @@ public class PdfLiteralString : PdfObject
     public Token Token { get; set; }
     public string Value { get; set; }
 
-    public PdfLiteralString(Token value) : base(PdfNodeType.LITERAL_STRING)
+    public PdfLiteralString(Token value) : base(PdfObjectType.LITERAL_STRING)
     {
         Token = value;
         Value = ResolveLiteralString(Token.Lexeme);

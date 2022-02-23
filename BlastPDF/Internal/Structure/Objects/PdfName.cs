@@ -11,7 +11,7 @@ public class PdfName : PdfObject
     public Token Token { get; set; }
     public string Name { get; set; }
     
-    public PdfName(Token token) : base(PdfNodeType.NAME)
+    public PdfName(Token token) : base(PdfObjectType.NAME)
     {
         Token = token;
         Name = ResolveName(Token.Lexeme);

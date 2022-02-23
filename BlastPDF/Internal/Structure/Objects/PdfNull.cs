@@ -6,7 +6,7 @@ public class PdfNull : PdfObject
 {
     public Token Token { get; set; }
 
-    public PdfNull(Token value) : base(PdfNodeType.NULL)
+    public PdfNull(Token value) : base(PdfObjectType.NULL)
     {
         Token = value;
     }

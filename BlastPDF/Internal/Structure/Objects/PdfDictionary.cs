@@ -7,7 +7,7 @@ public class PdfDictionary : PdfObject
 {
     public IDictionary<PdfName, PdfObject> Dictionary { get; set; }
 
-    public PdfDictionary(IDictionary<PdfName, PdfObject> dictionary) : base(PdfNodeType.DICTIONARY)
+    public PdfDictionary(IDictionary<PdfName, PdfObject> dictionary) : base(PdfObjectType.DICTIONARY)
     {
         Dictionary = dictionary;
     }
