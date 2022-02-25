@@ -6,7 +6,15 @@ namespace ShowCase
   {
     static void Main(string[] args)
     {
-      var lexer = Lexer.FromString("[ [ <b00b> /myname <dead> 1234 69] (yeah baby)    ");
+      var lexer = Lexer.FromString(@"
+<<
+  /Length 5
+  /Filter /FlateDecode
+>>
+stream
+oh fuck yeah baby steak monday
+endstream
+");
       var parser = new Parser(lexer);
       var objs = parser.Parse();
       

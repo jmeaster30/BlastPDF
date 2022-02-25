@@ -19,7 +19,9 @@ namespace BlastPDF.Internal
             {"startxref", TokenType.KEYWORD},
             {"xref", TokenType.KEYWORD},
             {"trailer", TokenType.KEYWORD},
-            {"R", TokenType.KEYWORD}
+            {"R", TokenType.KEYWORD},
+            {"n", TokenType.KEYWORD},
+            {"f", TokenType.KEYWORD}
         };
     }
 }

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace BlastPDF.Internal.Structure.Objects;
 
@@ -12,5 +14,13 @@ public class PdfStream : PdfObject
     {
         Dictionary = dictionary;
         Stream = new(stream);
+    }
+    
+    public override void Print()
+    {
+        Dictionary.Print();
+        Console.Write("\nstream\n");
+        Stream.Print();
+        Console.Write("\nendstream\n");
     }
 }

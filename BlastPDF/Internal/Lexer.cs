@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
+using BlastPDF.Internal.Exceptions;
 using BlastPDF.Internal.Helpers;
 
 namespace BlastPDF.Internal
@@ -227,9 +230,15 @@ namespace BlastPDF.Internal
       return CurrentToken;
     }
 
-    public Token GetStreamToken()
+    public Token GetStreamContentToken()
     {
       var lexeme = new StringBuilder();
+
+      while (!IsNextString("\r\nendstream") && !IsNextString("\rendstream") && !IsNextString("\nendstream"))
+      {
+        var val = (byte) _inputStream.ReadByte();
+        lexeme.Append(Encoding.UTF8.GetString(new [] { val }));
+      }
 
       CurrentToken = new Token(TokenType.STREAM_CONTENT, lexeme.ToString());
       return CurrentToken;
@@ -240,6 +249,22 @@ namespace BlastPDF.Internal
       if (CurrentToken == null)
         GetToken();
       CurrentToken = null;
+    }
+    
+    public void TryConsumeToken(List<Token> options)
+    {
+      var token = GetToken();
+      if (!options.Any(x => x.Type == token.Type && x.Lexeme == token.Lexeme))
+        throw new PdfParseException("Unexpected token :(   make this message a little better");
+      ConsumeToken();
+    }
+
+    public void TryConsumeToken(TokenType type)
+    {
+      var token = GetToken();
+      if (token.Type != type)
+        throw new PdfParseException($"Unexpected token :(    Expected {type} but found '{token.Lexeme}'({token.Type})");
+      ConsumeToken();
     }
 
     private bool IsNextString(string next)
