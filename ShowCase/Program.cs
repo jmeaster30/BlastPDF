@@ -1,4 +1,4 @@
-﻿using BlastPDF.Internal;
+﻿using BlastPDF;
 
 namespace ShowCase
 {
@@ -6,7 +6,8 @@ namespace ShowCase
   {
     static void Main(string[] args)
     {
-      var lexer = Lexer.FromString(@"
+      System.Console.WriteLine("STARTING....");
+      var pdf = PDF.LoadFromString(@"
 <<
   /Length 5
   /Filter /FlateDecode
@@ -15,13 +16,8 @@ stream
 oh fuck yeah baby steak monday
 endstream
 ");
-      var parser = new Parser(lexer);
-      var objs = parser.Parse();
-      
-      foreach (var node in objs)
-      {
-        node.Print();
-      }
+
+      pdf.printAllObjects();
     }
   }
 }

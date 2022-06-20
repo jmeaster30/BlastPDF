@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Text;
 using BlastPDF.Internal.Exceptions;
 using BlastPDF.Internal.Helpers;
@@ -36,7 +35,7 @@ namespace BlastPDF.Internal
 
     public Token GetToken()
     {
-      if (CurrentToken != null) return CurrentToken; 
+      if (CurrentToken != null) return CurrentToken;
       
       var currentByte = _inputStream.ReadByte();
 
@@ -236,8 +235,9 @@ namespace BlastPDF.Internal
 
       while (!IsNextString("\r\nendstream") && !IsNextString("\rendstream") && !IsNextString("\nendstream"))
       {
-        var val = (byte) _inputStream.ReadByte();
-        lexeme.Append(Encoding.UTF8.GetString(new [] { val }));
+        var val = _inputStream.ReadByte();
+        if (val == -1) break;
+        lexeme.Append(Encoding.UTF8.GetString(new [] { (byte)val }));
       }
 
       CurrentToken = new Token(TokenType.STREAM_CONTENT, lexeme.ToString());

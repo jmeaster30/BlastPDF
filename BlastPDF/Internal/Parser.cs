@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Xml.Schema;
 using BlastPDF.Internal.Exceptions;
 using BlastPDF.Internal.Structure;
 using BlastPDF.Internal.Structure.File;
