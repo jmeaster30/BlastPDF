@@ -194,22 +194,22 @@ namespace BlastPDF.Test.Internal
             var lexer = Lexer.FromString("+.12+-46 .43 8.3876 66 4.+ 0.0  -.23");
             CheckTokens(lexer, new List<Token>
             {
-                new(TokenType.REAL, "+.12"),
-                new(TokenType.REGULAR, "+"),
-                new(TokenType.INTEGER, "-46"),
-                new(TokenType.WHITESPACE, " "),
-                new(TokenType.REAL, ".43"),
-                new(TokenType.WHITESPACE, " "),
-                new(TokenType.REAL, "8.3876"),
-                new(TokenType.WHITESPACE, " "),
-                new(TokenType.INTEGER, "66"),
-                new(TokenType.WHITESPACE, " "),
-                new(TokenType.REAL, "4."),
-                new(TokenType.REGULAR, "+"),
-                new(TokenType.WHITESPACE, " "),
-                new(TokenType.REAL, "0.0"),
-                new(TokenType.WHITESPACE, "  "),
-                new(TokenType.REAL, "-.23")
+                new(TokenType.REAL, "+.12", 0, 4),
+                new(TokenType.REGULAR, "+", 4, 5),
+                new(TokenType.INTEGER, "-46", 5, 8),
+                new(TokenType.WHITESPACE, " ", 8, 9),
+                new(TokenType.REAL, ".43", 9, 12),
+                new(TokenType.WHITESPACE, " ", 12, 13),
+                new(TokenType.REAL, "8.3876", 13, 18),
+                new(TokenType.WHITESPACE, " ", 18, 19),
+                new(TokenType.INTEGER, "66", 19, 21),
+                new(TokenType.WHITESPACE, " ", 21, 22),
+                new(TokenType.REAL, "4.", 22, 24),
+                new(TokenType.REGULAR, "+", 24, 25),
+                new(TokenType.WHITESPACE, " ", 25, 26),
+                new(TokenType.REAL, "0.0", 26, 29),
+                new(TokenType.WHITESPACE, "  ", 29, 31),
+                new(TokenType.REAL, "-.23", 31, 34)
             });
             CheckEOF(lexer);
         }

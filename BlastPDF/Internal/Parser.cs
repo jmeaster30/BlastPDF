@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using BlastPDF.Internal.Exceptions;
 using BlastPDF.Internal.Structure;
-using BlastPDF.Internal.Structure.File;
 using BlastPDF.Internal.Structure.Objects;
 
 namespace BlastPDF.Internal
@@ -193,8 +192,8 @@ namespace BlastPDF.Internal
     {
       Lexer.ConsumeToken(); // consume stream keyword
       Lexer.TryConsumeToken(new List<Token> {
-        new (TokenType.EOL, "\r\n"),
-        new (TokenType.EOL, "\n")
+        new (TokenType.EOL, "\r\n", 0, 0),
+        new (TokenType.EOL, "\n", 0, 0)
       });
 
       var content = Lexer.GetStreamContentToken();

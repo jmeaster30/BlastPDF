@@ -38,8 +38,9 @@ namespace BlastPDF.Internal
       if (CurrentToken != null) return CurrentToken;
       
       var currentByte = _inputStream.ReadByte();
+      var startOffset = _inputStream.Position;
 
-      if (currentByte < 0) return new(TokenType.EOF, " ");
+      if (currentByte < 0) return new(TokenType.EOF, " ", startOffset, startOffset);
 
       TokenType type;
       string lexeme = "";
@@ -225,13 +226,15 @@ namespace BlastPDF.Internal
           break;
       }
 
-      CurrentToken = new Token(type, lexeme, errorMessage);
+      var endOffset = _inputStream.Position;
+      CurrentToken = new Token(type, lexeme, startOffset, endOffset, errorMessage);
       return CurrentToken;
     }
 
     public Token GetStreamContentToken()
     {
       var lexeme = new StringBuilder();
+      var startOffset = _inputStream.Position;
 
       while (!IsNextString("\r\nendstream") && !IsNextString("\rendstream") && !IsNextString("\nendstream"))
       {
@@ -240,7 +243,7 @@ namespace BlastPDF.Internal
         lexeme.Append(Encoding.UTF8.GetString(new [] { (byte)val }));
       }
 
-      CurrentToken = new Token(TokenType.STREAM_CONTENT, lexeme.ToString());
+      CurrentToken = new Token(TokenType.STREAM_CONTENT, lexeme.ToString(), startOffset, _inputStream.Position);
       return CurrentToken;
     }
 

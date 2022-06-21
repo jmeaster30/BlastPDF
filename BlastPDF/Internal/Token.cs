@@ -14,11 +14,15 @@ namespace BlastPDF.Internal
   {
     public TokenType Type { get; }
     public string Lexeme { get; }
+    public long StartOffset { get; }
+    public long EndOffset { get; }
     public string ErrorMessage { get; }
 
-    public Token(TokenType type, string lexeme, string error = "") {
+    public Token(TokenType type, string lexeme, long startOffset, long endOffset, string error = "") {
       Type = type;
       Lexeme = lexeme;
+      StartOffset = startOffset;
+      EndOffset = endOffset;
       ErrorMessage = error;
     }
   }
