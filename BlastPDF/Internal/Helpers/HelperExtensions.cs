@@ -38,5 +38,10 @@ namespace BlastPDF.Internal.Helpers
     {
       return str.TakeWhile(c => !func(c)).Count();
     }
+
+    public static string ToLiteral(this string valueTextForCompiler)
+    {
+        return Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatLiteral(valueTextForCompiler, false);
+    }
   }
 }

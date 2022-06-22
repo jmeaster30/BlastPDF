@@ -1,3 +1,5 @@
+using System;
+
 namespace BlastPDF.Internal.Structure.Objects;
 
 public class PdfIndirectReference : PdfObject
@@ -9,5 +11,13 @@ public class PdfIndirectReference : PdfObject
     {
         ObjectNumber = objNum;
         GenerationNumber = genNum;
+    }
+
+    public override void Print()
+    {
+        ObjectNumber.Print();
+        Console.Write(" ");
+        GenerationNumber.Print();
+        Console.Write(" R");
     }
 }

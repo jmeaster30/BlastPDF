@@ -254,6 +254,14 @@ namespace BlastPDF.Internal
       CurrentToken = null;
     }
     
+    public void TryConsumeToken(TokenType type, string lexeme)
+    {
+      var token = GetToken();
+      if (token.Type == type && token.Lexeme == lexeme)
+        throw new PdfParseException("Unexpected token :(   make this message a little better");
+      ConsumeToken();
+    }
+
     public void TryConsumeToken(List<Token> options)
     {
       var token = GetToken();

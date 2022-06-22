@@ -1,4 +1,4 @@
-using BlastPDF.Internal;
+using BlastPDF.Loader;
 using BlastPDF.Internal.Structure;
 using BlastPDF.Internal.Structure.File;
 using System.Collections.Generic;
@@ -13,13 +13,11 @@ namespace BlastPDF
     private PDF() {}
 
     public static PDF LoadFromFile(string filename) {
-      return null;
+      return new PDF(){ objects = PDFLoader.LoadFromFile(filename) };
     }
 
     public static PDF LoadFromString(string source) {
-      var lexer = Lexer.FromString(source);
-      var parser = new Parser(lexer);
-      return new PDF() { objects = parser.Parse() };
+      return new PDF(){ objects = PDFLoader.LoadFromString(source) };
     }
 
     public void printAllObjects() {

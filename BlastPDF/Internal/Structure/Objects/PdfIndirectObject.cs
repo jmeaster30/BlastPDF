@@ -1,3 +1,5 @@
+using System;
+
 namespace BlastPDF.Internal.Structure.Objects;
 
 public class PdfIndirectObject : PdfObject
@@ -11,5 +13,15 @@ public class PdfIndirectObject : PdfObject
         ObjectNumber = objNum;
         GenerationNumber = genNum;
         Value = value;
+    }
+
+    public override void Print()
+    {
+        ObjectNumber.Print();
+        Console.Write(" ");
+        GenerationNumber.Print();
+        Console.WriteLine(" obj");
+        Value.Print();
+        Console.WriteLine("endobj");
     }
 }

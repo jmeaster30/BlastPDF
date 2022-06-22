@@ -1,11 +1,9 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using BlastPDF.Internal.Exceptions;
 using BlastPDF.Internal.Structure;
 using BlastPDF.Internal.Structure.Objects;
-
 namespace BlastPDF.Internal
 {
   public class Parser
@@ -24,72 +22,8 @@ namespace BlastPDF.Internal
     {
       while (Lexer.GetToken().Type is not TokenType.EOF)
       {
-        var token = Lexer.GetToken();
-        switch (token.Type)
-        {
-          case TokenType.NAME:
-            Stack.Push(new PdfName(token));
-            Lexer.ConsumeToken();
-            break;
-          case TokenType.COMMENT:
-            Stack.Push(new PdfComment(token));
-            Lexer.ConsumeToken();
-            break;
-          case TokenType.INTEGER or TokenType.REAL:
-            Stack.Push(new PdfNumeric(token));
-            Lexer.ConsumeToken();
-            break;
-          case TokenType.BOOLEAN:
-            Stack.Push(new PdfBoolean(token));
-            Lexer.ConsumeToken();
-            break;
-          case TokenType.LITERAL:
-            Stack.Push(new PdfLiteralString(token));
-            Lexer.ConsumeToken();
-            break;
-          case TokenType.HEX:
-            Stack.Push(new PdfHexString(token));
-            Lexer.ConsumeToken();
-            break;
-          case TokenType.NULL:
-            Stack.Push(new PdfNull(token));
-            Lexer.ConsumeToken();
-            break;
-          case TokenType.WHITESPACE or TokenType.EOL:
-            ConsumeOptionalWhitespace();
-            break;
-          case TokenType.ARRAY_OPEN:
-            Stack.Push(new PdfObject(PdfObjectType.ARRAY_START));
-            Lexer.ConsumeToken();
-            break;
-          case TokenType.DICT_OPEN:
-            Stack.Push(new PdfObject(PdfObjectType.DICT_START));
-            Lexer.ConsumeToken();
-            break;
-          case TokenType.ARRAY_CLOSE:
-            ParseArray();
-            break;
-          case TokenType.DICT_CLOSE:
-            ParseDictionary();
-            break;
-          case TokenType.KEYWORD:
-            ParseKeyword();
-            break;
-          case TokenType.OPERATOR:
-            Lexer.ConsumeToken();
-            break;
-          case TokenType.ERROR:
-            Console.WriteLine($"Lexing Error: {token.ErrorMessage}");
-            Lexer.ConsumeToken();
-            break;
-        }
+        ParseObject();
       }
-
-      var firstInvalidToken =
-        Stack.FirstOrDefault(x => x.ObjectType is PdfObjectType.ARRAY_START or PdfObjectType.DICT_START);
-      if (firstInvalidToken is not null)
-        throw new PdfParseException(
-          $"Unclosed {(firstInvalidToken.ObjectType is PdfObjectType.ARRAY_START ? "array" : "dictionary")} :(");
 
       return Stack.Reverse().ToList();
     }
@@ -106,10 +40,75 @@ namespace BlastPDF.Internal
       }
     }
 
+    private void ParseObject()
+    {
+      ConsumeOptionalWhitespace();
+      var token = Lexer.GetToken();
+      switch (token.Type)
+      {
+        case TokenType.NAME:
+          Stack.Push(new PdfName(token));
+          Lexer.ConsumeToken();
+          break;
+        case TokenType.COMMENT:
+          Stack.Push(new PdfComment(token));
+          Lexer.ConsumeToken();
+          break;
+        case TokenType.INTEGER or TokenType.REAL:
+          Stack.Push(new PdfNumeric(token));
+          Lexer.ConsumeToken();
+          break;
+        case TokenType.BOOLEAN:
+          Stack.Push(new PdfBoolean(token));
+          Lexer.ConsumeToken();
+          break;
+        case TokenType.LITERAL:
+          Stack.Push(new PdfLiteralString(token));
+          Lexer.ConsumeToken();
+          break;
+        case TokenType.HEX:
+          Stack.Push(new PdfHexString(token));
+          Lexer.ConsumeToken();
+          break;
+        case TokenType.NULL:
+          Stack.Push(new PdfNull(token));
+          Lexer.ConsumeToken();
+          break;
+        case TokenType.ARRAY_OPEN:
+          ParseArray();
+          break;
+        case TokenType.DICT_OPEN:
+          ParseDictionary();
+          break;
+        case TokenType.KEYWORD:
+          ParseKeyword();
+          break;
+        case TokenType.OPERATOR:
+          Lexer.ConsumeToken();
+          break;
+        case TokenType.ERROR:
+          Console.WriteLine($"Lexing Error: {token.ErrorMessage}");
+          Lexer.ConsumeToken();
+          break;
+      }
+    }
+
     private void ParseArray()
     {
-      Lexer.ConsumeToken();
       var values = new List<PdfObject>();
+
+      Lexer.ConsumeToken();
+      Stack.Push(new PdfObject(PdfObjectType.ARRAY_START));
+
+      while (Lexer.GetToken().Type is not (TokenType.ARRAY_CLOSE or TokenType.EOF)) {
+        ParseObject();
+        ConsumeOptionalWhitespace();
+        if (!Stack.Any()) throw new PdfParseException("Unexpected empty stack while parsing array contents :(");
+      }
+
+      if (Lexer.GetToken().Type is TokenType.EOF) throw new PdfParseException("Unexpected end of file while parsing array contents");
+      Lexer.ConsumeToken(); // consume array close
+
       while (Stack.Any() && Stack.Peek().ObjectType != PdfObjectType.ARRAY_START)
       {
         var val = Stack.Pop();
@@ -118,10 +117,9 @@ namespace BlastPDF.Internal
         values.Insert(0, val);
       }
 
-      if (!Stack.Any() || Stack.Peek().ObjectType != PdfObjectType.ARRAY_START)
-        throw new PdfParseException("Found end of the array but could not find where the array started :(");
+      if (!Stack.Any()) throw new PdfParseException("WHOOPS WE ATE TOO MANY OBJECTS UWU");
+      Stack.Pop();
 
-      Stack.Pop(); // pop array start
       Stack.Push(new PdfArray(values));
     }
 
@@ -131,6 +129,16 @@ namespace BlastPDF.Internal
       var values = new List<PdfObject>();
       
       Lexer.ConsumeToken();
+      Stack.Push(new PdfObject(PdfObjectType.DICT_START));
+
+      while (Lexer.GetToken().Type is not (TokenType.DICT_CLOSE or TokenType.EOF)) {
+        ParseObject();
+        ConsumeOptionalWhitespace();
+        if (!Stack.Any()) throw new PdfParseException("Unexpected empty stack while parsing dictionary contents :(");
+      }
+
+      if (Lexer.GetToken().Type is TokenType.EOF) throw new PdfParseException("Unexpected end of file while parsing dictionary contents");
+      Lexer.ConsumeToken(); // consume dictionary close
 
       while (Stack.Any() && Stack.Peek().ObjectType != PdfObjectType.DICT_START)
       {
@@ -139,9 +147,9 @@ namespace BlastPDF.Internal
           throw new PdfParseException("Invalid object type in array :(");
         values.Insert(0, val);
       }
-      
-      if (!Stack.Any() || Stack.Peek().ObjectType != PdfObjectType.DICT_START)
-        throw new PdfParseException("Found end of the array but could not find where the array started :(");
+
+      if (!Stack.Any()) throw new PdfParseException("WHOOPS WE ATE TOO MANY OBJECTS UWU");
+      Stack.Pop();
 
       var chunks = values.Chunk(2);
       foreach (var chunk in chunks)
@@ -156,8 +164,7 @@ namespace BlastPDF.Internal
         
         dictionary.Add(key as PdfName, value);
       }
-      
-      Stack.Pop(); // pop array start
+
       Stack.Push(new PdfDictionary(dictionary));
     }
 
@@ -167,21 +174,28 @@ namespace BlastPDF.Internal
       switch (token.Lexeme)
       {
         case "obj":
-          Stack.Push(new PdfObject(PdfObjectType.OBJ_START));
+          ParseIndirectObject();
           break;
         case "stream":
           ParseStream();
           break;
+        case "startxref":
+          Stack.Push(new PdfObject(PdfObjectType.XREF_START));
+          Lexer.ConsumeToken();
+          // TODO finish this
+          break;
         case "xref":
           Stack.Push(new PdfObject(PdfObjectType.XREF_START));
+          Lexer.ConsumeToken();
+          // TODO finish this
           break;
         case "trailer":
           Stack.Push(new PdfObject(PdfObjectType.TRAILER));
+          Lexer.ConsumeToken();
+          // TODO finish this
           break;
         case "R":
           ParseIndirectReference();
-          break;
-        case "endstream":
           break;
         default:
           throw new PdfParseException($"Unhandled keyword {token.Lexeme} :(");
@@ -225,6 +239,51 @@ namespace BlastPDF.Internal
           objectNumber.ObjectType is PdfObjectType.NUMERIC && !(objectNumber as PdfNumeric).IsReal)
       {
         Stack.Push(new PdfIndirectReference(objectNumber as PdfNumeric, generationNumber as PdfNumeric));
+      }
+      else
+      {
+        throw new PdfParseException($"An indirect reference must be preceded by 2 integer numerics but this one was preceded by a {objectNumber.ObjectType} and a {generationNumber.ObjectType}");
+      }
+    }
+
+    private void ParseIndirectObject()
+    {
+      Lexer.ConsumeToken();
+      if (Stack.Count < 2)
+        throw new PdfParseException("Unexpected obj keyword. An indirect object requires to be preceded by 2 integer objects");
+
+      var generationNumber = Stack.Pop();
+      var objectNumber = Stack.Pop();
+
+      if (generationNumber.ObjectType is PdfObjectType.NUMERIC && !(generationNumber as PdfNumeric).IsReal &&
+          objectNumber.ObjectType is PdfObjectType.NUMERIC && !(objectNumber as PdfNumeric).IsReal)
+      {
+        Stack.Push(new PdfObject(PdfObjectType.OBJ_START));
+        var top = Lexer.GetToken();
+        while (!(top.Type == TokenType.KEYWORD && top.Lexeme == "endobj"))
+        {
+          ParseObject();
+          ConsumeOptionalWhitespace();
+          top = Lexer.GetToken();
+        }
+        
+        var values = new List<PdfObject>();
+        while (Stack.Any() && Stack.Peek().ObjectType != PdfObjectType.OBJ_START)
+        {
+          var val = Stack.Pop();
+          if (val.ObjectType > PdfObjectType.INDIRECT_REF)
+            throw new PdfParseException("Invalid object type in indirect object :(");
+          values.Insert(0, val);
+        }
+
+        if (!Stack.Any()) throw new PdfParseException("WHOOPS WE ATE TOO MANY OBJECTS UWU");
+        Stack.Pop();
+
+        if(values.Count != 1) throw new PdfParseException($"Unexpected amount of indirect object contents ({values.Count}) :(");
+
+        Lexer.TryConsumeToken(TokenType.KEYWORD, "endbj");
+        var indirect_object = new PdfIndirectObject(generationNumber as PdfNumeric, objectNumber as PdfNumeric, values[0]);
+        Stack.Push(indirect_object);
       }
       else
       {

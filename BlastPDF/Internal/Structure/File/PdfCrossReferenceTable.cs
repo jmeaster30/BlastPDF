@@ -30,9 +30,9 @@ public class PdfXReferenceSubSection : PdfObject
     public IEnumerable<PdfXReferenceEntry> Entries { get; set; }
     
     public PdfXReferenceSubSection(
-         PdfNumeric objNumber,
-         PdfNumeric numOfEntries,
-         IEnumerable<PdfXReferenceEntry> entries)
+        PdfNumeric objNumber,
+        PdfNumeric numOfEntries,
+        IEnumerable<PdfXReferenceEntry> entries)
         : base(PdfObjectType.XREF_SUB_SECTION)
     {
         FirstObjectNumber = objNumber;
