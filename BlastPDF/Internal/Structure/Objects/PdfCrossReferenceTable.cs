@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using BlastPDF.Internal.Structure.Objects;
 
-namespace BlastPDF.Internal.Structure.File;
+namespace BlastPDF.Internal.Structure.Objects;
 
 public class PdfXReferenceTable : PdfObject
 {

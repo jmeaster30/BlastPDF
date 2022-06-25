@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -37,6 +38,27 @@ namespace BlastPDF.Internal.Helpers
     public static int IndexOf(this string str, Func<char, bool> func)
     {
       return str.TakeWhile(c => !func(c)).Count();
+    }
+
+    public static List<List<T>> Split<T>(this List<T> values, Func<T, T, bool> func, bool inclusive = false)
+    {
+      var results = new List<List<T>>();
+      var current = new List<T>();
+      T prev = default(T);
+      foreach (var value in values) {
+        if (func(prev, value)) {
+          if (inclusive) {
+            current.Add(value);
+          }
+          results.Add(current);
+          current = new List<T>();
+          prev = value;
+          continue;
+        }
+        current.Add(value);
+        prev = value;
+      }
+      return results;
     }
 
     public static string ToLiteral(this string valueTextForCompiler)

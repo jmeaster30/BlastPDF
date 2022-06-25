@@ -1,9 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Linq;
 using BlastPDF.Internal.Exceptions;
+using BlastPDF.Internal.Helpers;
 using BlastPDF.Internal.Structure;
 using BlastPDF.Internal.Structure.Objects;
+using BlastPDF.Internal.Structure.File;
+
 namespace BlastPDF.Internal
 {
   public class Parser
@@ -18,7 +22,56 @@ namespace BlastPDF.Internal
       Stack = new Stack<PdfObject>();
     }
 
-    public IEnumerable<PdfObject> Parse()
+    private Regex pdfVersionHeader = new Regex(@"^%PDF-1\.[0-7]$");
+
+    public PdfInternalFile ParseFile()
+    {
+      var file = new PdfInternalFile();
+      var firstToken = Lexer.GetToken();
+      if (firstToken.Type != TokenType.COMMENT) throw new PdfParseException($"Expected header at start of file but got {Lexer.GetToken().Type}");
+      if (!pdfVersionHeader.IsMatch(firstToken.Lexeme)) throw new PdfParseException($"Header did not match form of '%PDF-1.[0-7]' found '{firstToken.Lexeme}'");
+      Lexer.ConsumeToken();
+      file.Header = new PdfComment(firstToken);
+
+      var objects = ParseBodyContents();
+      Console.WriteLine($"{objects.Count()} objs");
+      var content_groups = objects.ToList().Split((prev, curr) => 
+        (prev == null || prev.ObjectType == PdfObjectType.TRAILER) &&
+        curr.ObjectType == PdfObjectType.COMMENT &&
+        (curr as PdfComment).Comment.Lexeme == "%%EOF", true);
+
+      Console.WriteLine($"{content_groups.Count()} list");
+      foreach (var group in content_groups) {
+        if (group.Count() == 0) continue; // error?
+
+        var bodyContent = new PdfInternalBody();
+
+        if (group.Count() == 1) {
+          if (group.ElementAt(0).ObjectType == PdfObjectType.COMMENT) {
+            bodyContent.Footer = group.ElementAt(0) as PdfComment;
+            file.Body.Add(bodyContent);
+            continue;
+          }
+          throw new PdfParseException("Found body section with only 1 element.");
+        }
+        
+        bodyContent.Trailer = group.ElementAt(group.Count() - 1) as PdfTrailer;
+
+        var endOffset = 1;
+        var possibleXref = group.ElementAt(group.Count() - 2);
+        if (possibleXref.ObjectType == PdfObjectType.XREF_TABLE) {
+          bodyContent.CrossReferenceTable = possibleXref as PdfXReferenceTable;
+          endOffset = 2;
+        }
+
+        bodyContent.Contents = group.Take(group.Count() - endOffset - 1).ToList();
+        file.Body.Add(bodyContent);
+      }
+
+      return file;
+    }
+
+    public IEnumerable<PdfObject> ParseBodyContents()
     {
       while (Lexer.GetToken().Type is not TokenType.EOF)
       {
@@ -180,9 +233,10 @@ namespace BlastPDF.Internal
           ParseStream();
           break;
         case "startxref":
-          Stack.Push(new PdfObject(PdfObjectType.XREF_START));
-          Lexer.ConsumeToken();
-          // TODO finish this
+          ParseStartXref();
+          if (!Stack.Any() || Stack.Peek().ObjectType != PdfObjectType.START_XREF)
+            throw new PdfParseException($"Expected a startxref to be on the stack :(");
+          Stack.Push(new PdfTrailer(null, Stack.Pop() as PdfStartXref));
           break;
         case "xref":
           Stack.Push(new PdfObject(PdfObjectType.XREF_START));
@@ -190,9 +244,7 @@ namespace BlastPDF.Internal
           // TODO finish this
           break;
         case "trailer":
-          Stack.Push(new PdfObject(PdfObjectType.TRAILER));
-          Lexer.ConsumeToken();
-          // TODO finish this
+          ParseTrailer();
           break;
         case "R":
           ParseIndirectReference();
@@ -289,6 +341,39 @@ namespace BlastPDF.Internal
       {
         throw new PdfParseException($"An indirect reference must be preceded by 2 integer numerics but this one was preceded by a {objectNumber.ObjectType} and a {generationNumber.ObjectType}");
       }
+    }
+
+    private void ParseStartXref()
+    {
+      Lexer.ConsumeToken();
+
+      Lexer.TryConsumeToken(TokenType.EOL);
+      var next = Lexer.GetToken();
+      if (next.Type != TokenType.INTEGER) throw new PdfParseException($"Expected an integer to follow the 'startxref' keyword.");
+      Lexer.ConsumeToken();
+      Stack.Push(new PdfStartXref(new PdfNumeric(next)));
+    }
+
+    private void ParseTrailer()
+    {
+      Lexer.ConsumeToken();
+      ConsumeOptionalWhitespace();
+      var top = Lexer.GetToken();
+      if (top.Type != TokenType.DICT_OPEN) throw new PdfParseException($"Expected a dictionary following the 'trailer' keyword.");
+      ParseDictionary();
+      if (!Stack.Any() || Stack.Peek().ObjectType != PdfObjectType.DICTIONARY)
+        throw new PdfParseException($"Expected a dictionary following the 'trailer' keyword.");
+      
+      var dict = Stack.Pop() as PdfDictionary;
+      ConsumeOptionalWhitespace();
+      var nextToken = Lexer.GetToken();
+      if (nextToken.Type != TokenType.KEYWORD && nextToken.Lexeme != "startxref") throw new PdfParseException($"Expected startxref after the trailer dictionary.");
+      Lexer.ConsumeToken();
+      ParseStartXref();
+      if (!Stack.Any() || Stack.Peek().ObjectType != PdfObjectType.START_XREF)
+        throw new PdfParseException($"Expected a startxref to be on the stack :(");
+      
+      Stack.Push(new PdfTrailer(dict, Stack.Pop() as PdfStartXref));
     }
   }
 }
