@@ -1,7 +1,8 @@
 using BlastPDF.Builder.Graphics.Util;
-using BlastPDF.Builder.Interfaces;
+using BlastPDF.Builder.Exporter;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace BlastPDF.Builder.Graphics;
 
@@ -43,16 +44,26 @@ public enum RenderingIntent {
   Perceptual,
 }
 
-//public class ColorSpace {
-
-//}
+public enum PdfColorSpace {
+  DeviceGray,
+  DeviceRGB,
+  DeviceCMYK,
+  CalGray,
+  CalRGB,
+  Lab,
+  ICCBased,
+  Pattern,
+  Indexed,
+  Separation,
+  DeviceN
+}
 
 public enum AlphaSource {
   Shape, // true
   Opacity // false
 }
 
-public class PdfGraphicsObject : IPdfStreamExporter {
+public class PdfGraphicsObject {
 
   protected List<PdfGraphicsObject> SubObjects = new List<PdfGraphicsObject>();
 
@@ -63,28 +74,49 @@ public class PdfGraphicsObject : IPdfStreamExporter {
   
   // TODO add ClippingPath;
 
-  // TODO add ColorSpace;
-  // TODO add Color;
+  PdfColorSpace _colorSpace;
+  List<decimal> _color;
+  //TODO figure out color
+
+
   // TODO add TextState;
   
   // operator w
-  decimal _lineWidth = 1.0M;
+  decimal _lineWidth;
   //operator J
-  LineCapStyle _lineCapStyle = LineCapStyle.SquareButt;
+  LineCapStyle _lineCapStyle;
   //operator j
-  LineJoinStyle _lineJoinStyle = LineJoinStyle.Mitered;
+  LineJoinStyle _lineJoinStyle;
   //operator M
-  decimal _miterLimit = 10.0M;
+  decimal _miterLimit;
 
   //operator d
-  LineDashPattern _dashPattern = LineDashPattern.Solid;
+  LineDashPattern _dashPattern;
   //operator ri
-  RenderingIntent _renderingIntent = RenderingIntent.RelativeColorimetric;
+  RenderingIntent _renderingIntent;
   //TODO bool StrokeAdjustment = false;
   // TODO BlendMode BlendMode = BlendMode.Normal;
   //TODO add SoftMask;
   //TODO decimal AlphaConstant = 1.0;
   //TODO AlphaSource AlphaSource = AlphaSource.Opacity;
+
+  public PdfGraphicsObject SetGray(decimal value) {
+    _colorSpace = PdfColorSpace.DeviceGray;
+    _color = new List<decimal>{ value };
+    return this;
+  }
+
+  public PdfGraphicsObject SetRGB(decimal r, decimal g, decimal b) {
+    _colorSpace = PdfColorSpace.DeviceRGB;
+    _color = new List<decimal>{ r, g, b };
+    return this;
+  }
+
+  public PdfGraphicsObject SetCMYK(decimal c, decimal m, decimal y, decimal k) {
+    _colorSpace = PdfColorSpace.DeviceCMYK;
+    _color = new List<decimal>{ c, m, y, k };
+    return this;
+  }
 
   public PdfGraphicsObject Translate(decimal x, decimal y) {
     _currentTransformationMatrix = _currentTransformationMatrix.Translate(x, y);
@@ -146,7 +178,12 @@ public class PdfGraphicsObject : IPdfStreamExporter {
   //TODO add Flatness; //operator i
   //TODO add Smoothness;
 
-  public virtual void Export(Stream stream) {
-    // TODO
+  public virtual PdfExporterResults Export(Stream stream, int objectNumber) {
+    if (_currentTransformationMatrix.transforms.Any()) {
+      foreach(var transform in _currentTransformationMatrix.transforms) {
+
+      }
+    }
+    return new PdfExporterResults();
   }
 }

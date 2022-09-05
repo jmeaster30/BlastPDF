@@ -39,6 +39,6 @@ public class Program {
             .Line(600, 790)
             .Paint(PaintMode.Stroke)
             .LineWidth(10)))
-      .Export(fs);
+      .Save(fs);
   }
 }

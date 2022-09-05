@@ -1,8 +1,8 @@
-using BlastPDF.Builder.Interfaces;
+using BlastPDF.Builder.Exporter;
 
 namespace BlastPDF.Builder.Graphics;
 
-public class PdfGraphicsGroup : PdfGraphicsObject, IPdfStreamExporter {
+public class PdfGraphicsGroup : PdfGraphicsObject {
   public static PdfGraphicsGroup Create() {
     return new PdfGraphicsGroup();
   }

@@ -1,11 +1,11 @@
-using BlastPDF.Builder.Interfaces;
+using BlastPDF.Builder.Exporter;
 using System.IO;
 using System.Collections.Generic;
 
 namespace BlastPDF.Builder.Graphics.Drawing;
 
-abstract class PdfPathSegment : IPdfStreamExporter {
-  public abstract void Export(Stream stream);
+abstract class PdfPathSegment {
+  public abstract PdfExporterResults Export(Stream stream, int objectNumber);
 }
 
 class PdfPathMove : PdfPathSegment {
@@ -15,7 +15,9 @@ class PdfPathMove : PdfPathSegment {
     _x = x; _y = y;
   }
 
-  public override void Export(Stream stream) { }
+  public override PdfExporterResults Export(Stream stream, int objectNumber) {
+    return new PdfExporterResults();
+  }
 }
 
 class PdfPathLine : PdfPathSegment {
@@ -25,7 +27,9 @@ class PdfPathLine : PdfPathSegment {
     _x = x; _y = y;
   }
 
-  public override void Export(Stream stream) { }
+  public override PdfExporterResults Export(Stream stream, int objectNumber) {
+    return new PdfExporterResults();
+  }
 }
 
 class PdfPathBezier : PdfPathSegment {
@@ -41,7 +45,9 @@ class PdfPathBezier : PdfPathSegment {
     _dest_x = dest_x; _dest_y = dest_y;
   }
 
-  public override void Export(Stream stream) { }
+  public override PdfExporterResults Export(Stream stream, int objectNumber) {
+    return new PdfExporterResults();
+  }
 }
 
 class PdfPathRect : PdfPathSegment {
@@ -53,11 +59,15 @@ class PdfPathRect : PdfPathSegment {
     _x = x; _y = y; _width = width; _height = height;
   }
 
-  public override void Export(Stream stream) { }
+  public override PdfExporterResults Export(Stream stream, int objectNumber) {
+    return new PdfExporterResults();
+  }
 }
 
 class PdfPathClose : PdfPathSegment {
-  public override void Export(Stream stream) { }
+  public override PdfExporterResults Export(Stream stream, int objectNumber) {
+    return new PdfExporterResults();
+  }
 }
 
 public enum PaintMode {
@@ -108,7 +118,8 @@ public class PdfPath : PdfGraphicsObject {
     return this;
   }
 
-  public override void Export(Stream stream) {
-
+  public override PdfExporterResults Export(Stream stream, int objectNumber) {
+    System.Console.WriteLine("path");
+    return new PdfExporterResults();
   }
 }

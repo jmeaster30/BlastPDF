@@ -5,7 +5,7 @@ namespace BlastPDF.Builder.Graphics.Util;
 
 public class PdfMatrix {
 
-  List<decimal[]> transforms = new List<decimal[]>();
+  public List<decimal[]> transforms { get; set;} = new List<decimal[]>();
 
   public PdfMatrix Translate(decimal x, decimal y) {
     transforms.Add(new decimal[] {1.0M, 0.0M, 0.0M, 1.0M, x, y});
