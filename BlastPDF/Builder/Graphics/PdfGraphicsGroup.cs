@@ -1,5 +1,3 @@
-using BlastPDF.Builder.Exporter;
-
 namespace BlastPDF.Builder.Graphics;
 
 public class PdfGraphicsGroup : PdfGraphicsObject {

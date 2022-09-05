@@ -1,5 +1,6 @@
 using BlastPDF.Builder.Graphics.Util;
 using BlastPDF.Builder.Exporter;
+using BlastPDF.Builder.Util;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -63,6 +64,17 @@ public enum AlphaSource {
   Opacity // false
 }
 
+public static class PdfGraphicsObjectExtenstions {
+  public static int Value(this LineCapStyle capStyle){
+    return capStyle switch {
+      LineCapStyle.SquareButt => 0,
+      LineCapStyle.Round => 1,
+      LineCapStyle.ProjectingSquare => 2,
+      _ => 0
+    };
+  }
+}
+
 public class PdfGraphicsObject {
 
   protected List<PdfGraphicsObject> SubObjects = new List<PdfGraphicsObject>();
@@ -74,7 +86,7 @@ public class PdfGraphicsObject {
   
   // TODO add ClippingPath;
 
-  PdfColorSpace _colorSpace;
+  PdfColorSpace? _colorSpace;
   List<decimal> _color;
   //TODO figure out color
 
@@ -82,18 +94,18 @@ public class PdfGraphicsObject {
   // TODO add TextState;
   
   // operator w
-  decimal _lineWidth;
+  decimal? _lineWidth;
   //operator J
-  LineCapStyle _lineCapStyle;
+  LineCapStyle? _lineCapStyle;
   //operator j
-  LineJoinStyle _lineJoinStyle;
+  LineJoinStyle? _lineJoinStyle;
   //operator M
-  decimal _miterLimit;
+  decimal? _miterLimit;
 
   //operator d
   LineDashPattern _dashPattern;
   //operator ri
-  RenderingIntent _renderingIntent;
+  RenderingIntent? _renderingIntent;
   //TODO bool StrokeAdjustment = false;
   // TODO BlendMode BlendMode = BlendMode.Normal;
   //TODO add SoftMask;
@@ -181,9 +193,19 @@ public class PdfGraphicsObject {
   public virtual PdfExporterResults Export(Stream stream, int objectNumber) {
     if (_currentTransformationMatrix.transforms.Any()) {
       foreach(var transform in _currentTransformationMatrix.transforms) {
-
+        stream.Write($"{transform[0]} {transform[1]} {transform[2]} {transform[3]} {transform[4]} {transform[5]} cm\n".ToUTF8());
       }
     }
+
+    if (_lineWidth != null) stream.Write($"{_lineWidth} w\n".ToUTF8());
+    if (_lineCapStyle != null) stream.Write($"{_lineCapStyle.Value.Value()} J\n".ToUTF8());
+
+    foreach (var obj in SubObjects) {
+      stream.Write("q\n".ToUTF8());
+      obj.Export(stream, objectNumber);
+      stream.Write("Q\n".ToUTF8());
+    }
+
     return new PdfExporterResults();
   }
 }

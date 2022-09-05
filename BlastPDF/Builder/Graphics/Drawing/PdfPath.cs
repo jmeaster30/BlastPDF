@@ -1,6 +1,7 @@
 using BlastPDF.Builder.Exporter;
 using System.IO;
 using System.Collections.Generic;
+using BlastPDF.Builder.Util;
 
 namespace BlastPDF.Builder.Graphics.Drawing;
 
@@ -16,6 +17,7 @@ class PdfPathMove : PdfPathSegment {
   }
 
   public override PdfExporterResults Export(Stream stream, int objectNumber) {
+    stream.Write($"{_x} {_y} m\n".ToUTF8());
     return new PdfExporterResults();
   }
 }
@@ -28,6 +30,7 @@ class PdfPathLine : PdfPathSegment {
   }
 
   public override PdfExporterResults Export(Stream stream, int objectNumber) {
+    stream.Write($"{_x} {_y} l\n".ToUTF8());
     return new PdfExporterResults();
   }
 }
@@ -46,6 +49,7 @@ class PdfPathBezier : PdfPathSegment {
   }
 
   public override PdfExporterResults Export(Stream stream, int objectNumber) {
+    stream.Write($"{_control1_x} {_control1_y} {_control2_x} {_control2_y} {_dest_x} {_dest_y} c\n".ToUTF8());
     return new PdfExporterResults();
   }
 }
@@ -60,12 +64,14 @@ class PdfPathRect : PdfPathSegment {
   }
 
   public override PdfExporterResults Export(Stream stream, int objectNumber) {
+    stream.Write($"{_x} {_y} {_width} {_height} re\n".ToUTF8());
     return new PdfExporterResults();
   }
 }
 
 class PdfPathClose : PdfPathSegment {
   public override PdfExporterResults Export(Stream stream, int objectNumber) {
+    stream.Write("h\n".ToUTF8());
     return new PdfExporterResults();
   }
 }
@@ -80,6 +86,23 @@ public enum PaintMode {
   CloseFillStroke,
   CloseFillStrokeEvenOdd,
   NoStroke
+}
+
+public static class PdfPathExtensions {
+  public static string getOperator(this PaintMode mode) {
+    return mode switch {
+      PaintMode.Stroke => "S",
+      PaintMode.CloseStroke => "s",
+      PaintMode.Fill => "f",
+      PaintMode.FillEvenOdd => "f*",
+      PaintMode.FillStroke => "B",
+      PaintMode.FillStrokeEvenOdd => "B*",
+      PaintMode.CloseFillStroke => "b",
+      PaintMode.CloseFillStrokeEvenOdd => "b*",
+      PaintMode.NoStroke => "n",
+      _ => "n"
+    };
+  }
 }
 
 public class PdfPath : PdfGraphicsObject {
@@ -119,7 +142,13 @@ public class PdfPath : PdfGraphicsObject {
   }
 
   public override PdfExporterResults Export(Stream stream, int objectNumber) {
-    System.Console.WriteLine("path");
+    base.Export(stream, objectNumber);
+    foreach(var segment in segments) {
+      segment.Export(stream, objectNumber);
+    }
+    stream.Write(paintOperator.getOperator().ToUTF8());
+    stream.Write("\n".ToUTF8());
+
     return new PdfExporterResults();
   }
 }
