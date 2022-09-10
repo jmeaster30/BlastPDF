@@ -20,11 +20,13 @@ public class Program {
     var triangleWidth = 5.0M;
     for(int i = 0; i < 96; i++) {
       graphicsGroup.Add(
-        DrawTriangle(0, 0, triangleWidth)
+        PdfGraphicsObject.Create()
           .Translate(500, 500)
           .Rotate(i * (decimal)Math.PI / 96)
+          .DrawTriangle(0, 0, triangleWidth)
+          .ResetState()
       );
-      triangleWidth *= 1.1M;
+      triangleWidth *= 1.070M;
     }
 
     using FileStream fs = File.Create(path);
@@ -37,7 +39,11 @@ public class Program {
       .Save(fs);
   }
 
-  public static PdfGraphicsObject DrawTriangle(decimal x, decimal y, decimal length)
+  
+}
+
+public static class MyExtension {
+  public static PdfGraphicsObject DrawTriangle(this PdfGraphicsObject path, decimal x, decimal y, decimal length)
   {
     var radius = length / (2 * (decimal)Math.Cos(Math.PI / 6));
     var apothem = length * (decimal)Math.Tan(Math.PI / 6) / 2;
@@ -46,7 +52,7 @@ public class Program {
     var left = (x - (length / 2), y - apothem);
     var right = (x + (length / 2), y - apothem);
 
-    return PdfPath.Start()
+    return path
       .Move(top.Item1, top.Item2)
       .Line(left.Item1, left.Item2)
       .Line(right.Item1, right.Item2)

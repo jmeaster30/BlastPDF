@@ -1,7 +1,7 @@
 namespace BlastPDF.Builder.Graphics;
 
 public class PdfGraphicsGroup : PdfGraphicsObject {
-  public static PdfGraphicsGroup Create() {
+  public static new PdfGraphicsGroup Create() {
     return new PdfGraphicsGroup();
   }
 

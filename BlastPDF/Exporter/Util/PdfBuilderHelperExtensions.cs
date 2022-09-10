@@ -1,8 +1,8 @@
 using System.Text;
 
-namespace BlastPDF.Builder.Util;
+namespace BlastPDF.Exporter.Util;
 
-public static class PdfBuilderHelperExtensions {
+public static class ExporterHelperExtensions {
   public static byte[] ToUTF8(this string value) {
     return Encoding.UTF8.GetBytes(value);
   }
