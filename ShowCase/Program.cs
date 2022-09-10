@@ -1,4 +1,4 @@
-﻿using BlastPDF;
+﻿using BlastPDF.Exporter.Basic;
 using BlastPDF.Builder;
 using BlastPDF.Builder.Graphics;
 using BlastPDF.Builder.Graphics.Drawing;
@@ -22,7 +22,7 @@ public class Program {
       graphicsGroup.Add(
         DrawTriangle(0, 0, triangleWidth)
           .Translate(500, 500)
-          .Rotate(i * (decimal)Math.PI / 6)
+          .Rotate(i * (decimal)Math.PI / 96)
       );
       triangleWidth *= 1.1M;
     }
@@ -50,6 +50,6 @@ public class Program {
       .Move(top.Item1, top.Item2)
       .Line(left.Item1, left.Item2)
       .Line(right.Item1, right.Item2)
-      .Paint(PaintMode.CloseStroke);
+      .Paint(PaintModeEnum.CloseStroke);
   }
 }
