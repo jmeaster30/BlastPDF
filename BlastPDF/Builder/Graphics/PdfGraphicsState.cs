@@ -202,7 +202,7 @@ public static class PdfGraphicsStateExtensions {
   }
 
   public static PdfGraphicsObject SetCMYK(this PdfGraphicsObject graphics, decimal c, decimal m, decimal y, decimal k) {
-    graphics.SubObjects.Add(PdfColor.DeviceCMYK(c, y, m, k));
+    graphics.SubObjects.Add(PdfColor.DeviceCMYK(c, m, y, k));
     return graphics;
   }
 

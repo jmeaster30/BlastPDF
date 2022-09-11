@@ -23,6 +23,8 @@ public class Program {
         PdfGraphicsObject.Create()
           .Translate(500, 500)
           .Rotate(i * (decimal)Math.PI / 96)
+          .LineWidth(2)
+          .SetStrokeRGB(i / 96.0M, 0.0M, 1.0M - (i / 96.0M))
           .DrawTriangle(0, 0, triangleWidth)
           .ResetState()
       );
@@ -35,7 +37,11 @@ public class Program {
         .DotsPerInch(100)
         .Width(10)
         .Height(10)
-        .AddGraphics(graphicsGroup.LineWidth(2)))
+        .AddGraphics(PdfGraphicsObject.Create()
+          .SetCMYK(0.0M, 0.0M, 1.0M, 0.0M)
+          .Rect(0, 0, 1000, 1000)
+          .Paint(PaintModeEnum.CloseFillStroke))
+        .AddGraphics(graphicsGroup))
       .Save(fs);
   }
 
