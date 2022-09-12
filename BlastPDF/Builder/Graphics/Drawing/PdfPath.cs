@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace BlastPDF.Builder.Graphics.Drawing;
 
 public class PdfPathMove : PdfGraphicsObject {

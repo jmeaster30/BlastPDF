@@ -3,17 +3,6 @@ using BlastPDF.Builder.Graphics;
 
 namespace BlastPDF.Builder;
 
-public class CropBoxRect {
-  public decimal X { get; }
-  public decimal Y { get; }
-  public decimal Width { get; }
-  public decimal Height { get; }
-
-  public CropBoxRect(decimal x, decimal y, decimal width, decimal height) {
-    X = x; Y = y; Width = width; Height = height;
-  }
-}
-
 public class PdfPage {
   int dotsPerInch = 72;
   decimal width = 8.5M;
