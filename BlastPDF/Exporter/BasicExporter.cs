@@ -18,6 +18,7 @@ public static class BasicExporterExtension {
     var pageRefNumbers = new List<int>();
 
     var nextStart = 3;
+
     foreach(var page in document.Pages) {
       var refs = page.Export(stream, nextStart);
       crossReferences.AddRange(refs.ObjectNumberByteOffsets);
@@ -26,6 +27,8 @@ public static class BasicExporterExtension {
       }
       pageRefNumbers.AddRange(refs.PageRefNumber);
     }
+
+    // document level resources
 
     crossReferences.Add((2, stream.Position));
     stream.Write($"2 0 obj\n".ToUTF8());
@@ -74,6 +77,8 @@ public static class BasicExporterExtension {
 
     var crossReferences = new List<(int, long)>();
     var contentRefs = new List<int>();
+    
+    // export the page resources
 
     var nextStart = objectNumber;
     foreach(var obj in page.Objects) {

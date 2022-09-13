@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace BlastPDF.Builder.Graphics;
 
-public class PdfGraphicsObject {
+public class PdfGraphicsObject : PdfObject {
 
   public List<PdfGraphicsObject> SubObjects { get; protected set; }= new List<PdfGraphicsObject>();
 

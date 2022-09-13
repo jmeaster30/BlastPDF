@@ -179,7 +179,7 @@ public enum AlphaSource {
   Opacity // false
 }
 
-public static class PdfGraphicsObjectExtenstions {
+public static class PdfGraphicsObjectExtensions {
   public static int Value(this LineCapStyle capStyle){
     return capStyle switch {
       LineCapStyle.SquareButt => 0,

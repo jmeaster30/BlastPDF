@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using BlastPDF.Builder.Graphics;
 
@@ -14,8 +15,16 @@ public class PdfPage {
   public decimal CropBoxH => dotsPerInch * height;
 
   public List<PdfGraphicsObject> Objects { get; } = new List<PdfGraphicsObject>();
+  public Dictionary<string, PdfObject> Resources { get; } = new Dictionary<string, PdfObject>();
 
   public static PdfPage Create() { return new PdfPage(); }
+
+  public PdfPage AddResource(string resourceName, PdfObject pdfObject) {
+    if (string.IsNullOrEmpty(resourceName)) throw new ArgumentNullException("resourceName");
+    if (Resources.ContainsKey(resourceName)) throw new ArgumentException($"Resource '{resourceName}' already exists as a resource for this page :(");
+    Resources.Add(resourceName, pdfObject);
+    return this;
+  }
 
   public PdfPage AddGraphics(PdfGraphicsObject graphicsObject) {
     Objects.Add(graphicsObject);
