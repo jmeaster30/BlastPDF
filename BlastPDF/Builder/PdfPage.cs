@@ -14,8 +14,8 @@ public class PdfPage {
   public decimal CropBoxW => dotsPerInch * width;
   public decimal CropBoxH => dotsPerInch * height;
 
-  public List<PdfGraphicsObject> Objects { get; } = new List<PdfGraphicsObject>();
-  public Dictionary<string, PdfObject> Resources { get; } = new Dictionary<string, PdfObject>();
+  public List<PdfGraphicsObject> Objects { get; } = new();
+  public Dictionary<string, PdfObject> Resources { get; } = new();
 
   public static PdfPage Create() { return new PdfPage(); }
 

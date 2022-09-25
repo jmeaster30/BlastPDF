@@ -70,9 +70,9 @@ public class PdfImage : PdfObject {
   }
 
   private static (byte, byte, byte, byte) ToCMYK(byte R, byte G, byte B) {
-    double r_prime = ((int)R) / 255.0;
-    double g_prime = ((int)G) / 255.0;
-    double b_prime = ((int)B) / 255.0;
+    double r_prime = R / 255.0;
+    double g_prime = G / 255.0;
+    double b_prime = B / 255.0;
     double K = 1 - Math.Max(r_prime, Math.Max(g_prime, b_prime));
     double C = (1 - r_prime - K) / (1 - K);
     double M = (1 - g_prime - K) / (1 - K);

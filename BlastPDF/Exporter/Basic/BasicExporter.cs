@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -77,10 +78,27 @@ public static class BasicExporterExtension {
 
     var crossReferences = new List<(int, long)>();
     var contentRefs = new List<int>();
+    var nextStart = objectNumber;
     
     // export the page resources
-
-    var nextStart = objectNumber;
+    List<(string, int)> x_objects = new();
+    foreach (var res in page.Resources)
+    {
+      x_objects.Add((res.Key, nextStart));
+      res.Value.Export(stream, nextStart);
+      nextStart += 1;
+    }
+    // build page resource dictionary
+    stream.Write($"{nextStart} 0 obj\n".ToUTF8());
+    stream.Write("<< /ProcSet [/PDF /Text /ImageB /ImageC /ImageI]\n".ToUTF8());
+    stream.Write("/XObject <<\n".ToUTF8());
+    foreach (var xobj in x_objects)
+    {
+      stream.Write($"/{xobj.Item1} {xobj.Item2} 0 R\n".ToUTF8());
+    }
+    // Font's will be in a different sub dictionary in this resource section
+    stream.Write(">>\n>>\nendobj\n".ToUTF8());
+    
     foreach(var obj in page.Objects) {
       contentRefs.Add(nextStart);
       crossReferences.Add((nextStart, stream.Position));
@@ -93,6 +111,7 @@ public static class BasicExporterExtension {
       var startOffset = stream.Position;
       stream.Write("q\n".ToUTF8());
       var refs = obj.Export(stream, nextStart + 2);
+      // We shouldn't need to do anything with refs currently
       stream.Write("Q\n".ToUTF8());
       var endOffset = stream.Position;
       stream.Write("endstream\nendobj\n".ToUTF8());
@@ -128,47 +147,74 @@ public static class BasicExporterExtension {
     return results;
   }
 
+  private static PdfExporterResults Export(this PdfObject pdfObject, Stream stream, int objectNumber)
+  {
+    return pdfObject switch
+    {
+      PdfImage image => image.Export(stream, objectNumber),
+      PdfGraphicsObject graphics => graphics.Export(stream, objectNumber),
+      _ => throw new Exception("Unhandled subtype of PdfObject")
+    };
+  }
+
+  private static PdfExporterResults Export(this PdfImage pdfImage, Stream stream, int objectNumber)
+  {
+    return pdfImage switch
+    {
+      PdfEmbeddedImage embed => embed.Export(stream, objectNumber),
+      PdfExternalImage external => throw new NotImplementedException("URL images are not supported yet :("),
+      _ => throw new Exception("Unhandled subtype of PdfImage")
+    };
+  }
+
+  private static PdfExporterResults Export(this PdfEmbeddedImage embed, Stream stream, int objectNumber)
+  {
+    stream.Write($"{objectNumber} 0 obj\n".ToUTF8());
+    stream.Write("<<\n/Type /XObject\n/Subtype /Image\n".ToUTF8());
+    stream.Write($"/Width {embed.Width}\n/Height {embed.Height}".ToUTF8());
+    stream.Write($"/ColorSpace /{embed.ColorSpace}\n/BitsPerComponent {embed.BitsPerComponent}\n".ToUTF8());
+    stream.Write($"/Length {embed.ImageData.LongLength}\n".ToUTF8());
+    stream.Write(">>\nstream\n".ToUTF8());
+    stream.Write(embed.ImageData);
+    stream.Write("\nendstream\nendobj\n".ToUTF8());
+    return new PdfExporterResults();
+  }
+
   private static PdfExporterResults Export(this PdfGraphicsObject graphicsObject, Stream stream, int objectNumber) {
-    // TODO really need to make this better
-    PdfGraphicsGroup group = graphicsObject as PdfGraphicsGroup;
-    if (group != null) return group.Export(stream, objectNumber);
-    PdfPathMove move = graphicsObject as PdfPathMove;
-    if (move != null) return move.Export(stream, objectNumber);
-    PdfPathLine line = graphicsObject as PdfPathLine;
-    if (line != null) return line.Export(stream, objectNumber);
-    PdfPathBezier bezier = graphicsObject as PdfPathBezier;
-    if (bezier != null) return bezier.Export(stream, objectNumber);
-    PdfPathRect rect = graphicsObject as PdfPathRect;
-    if (rect != null) return rect.Export(stream, objectNumber);
-    PdfPathClose close = graphicsObject as PdfPathClose;
-    if (close != null) return close.Export(stream, objectNumber);
-    PdfPathPaint paint = graphicsObject as PdfPathPaint;
-    if (paint != null) return paint.Export(stream, objectNumber);
-    PdfColor color = graphicsObject as PdfColor;
-    if (color != null) return color.Export(stream, objectNumber);
-    PdfTransform transform = graphicsObject as PdfTransform;
-    if (transform != null) return transform.Export(stream, objectNumber);
-    PdfLineWidth lineWidth = graphicsObject as PdfLineWidth;
-    if (lineWidth != null) return lineWidth.Export(stream, objectNumber);
-    PdfLineCapStyle capStyle = graphicsObject as PdfLineCapStyle;
-    if (capStyle != null) return capStyle.Export(stream, objectNumber);
-    PdfLineJoinStyle joinStyle = graphicsObject as PdfLineJoinStyle;
-    if (joinStyle != null) return joinStyle.Export(stream, objectNumber);
-    PdfMiterLimit miterLimit = graphicsObject as PdfMiterLimit;
-    if (miterLimit != null) return miterLimit.Export(stream, objectNumber);
-    PdfLineDashPattern dashPattern = graphicsObject as PdfLineDashPattern;
-    if (dashPattern != null) return dashPattern.Export(stream, objectNumber);
-    PdfRenderingIntent intent = graphicsObject as PdfRenderingIntent;
-    if (intent != null) return intent.Export(stream, objectNumber);
-    PdfResetGraphicsState reset = graphicsObject as PdfResetGraphicsState;
-    if (reset != null) return reset.Export(stream, objectNumber);
-    
+    // TODO I have a feeling this could still be better
+    switch (graphicsObject)
+    {
+      case PdfGraphicsGroup group: return group.Export(stream, objectNumber);
+      case PdfPathMove move: return move.Export(stream, objectNumber);
+      case PdfPathLine line: return line.Export(stream, objectNumber);
+      case PdfPathBezier bezier: return bezier.Export(stream, objectNumber);
+      case PdfPathRect rect: return rect.Export(stream, objectNumber);
+      case PdfPathClose close: return close.Export(stream, objectNumber);
+      case PdfPathPaint paint: return paint.Export(stream, objectNumber);
+      case PdfColor color: return color.Export(stream, objectNumber);
+      case PdfTransform transform: return transform.Export(stream, objectNumber);
+      case PdfLineWidth lineWidth: return lineWidth.Export(stream, objectNumber);
+      case PdfLineCapStyle capStyle: return capStyle.Export(stream, objectNumber);
+      case PdfLineJoinStyle joinStyle: return joinStyle.Export(stream, objectNumber);
+      case PdfMiterLimit miterLimit: return miterLimit.Export(stream, objectNumber);
+      case PdfLineDashPattern dashPattern: return dashPattern.Export(stream, objectNumber);
+      case PdfRenderingIntent intent: return intent.Export(stream, objectNumber);
+      case PdfResetGraphicsState reset: return reset.Export(stream, objectNumber);
+      case PdfXObject xobj: return xobj.Export(stream, objectNumber);
+    }
+
     foreach (var obj in graphicsObject.SubObjects) {
       obj.Export(stream, objectNumber);
     }
     return new PdfExporterResults();
   }
 
+  private static PdfExporterResults Export(this PdfXObject xobj, Stream stream, int objectNumber)
+  {
+    stream.Write($"/{xobj.Resource} Do\n".ToUTF8());
+    return new PdfExporterResults();
+  }
+  
   private static PdfExporterResults Export(this PdfGraphicsGroup group, Stream stream, int objectNumber) {
     stream.Write("q\n".ToUTF8());
     foreach (var obj in group.SubObjects) {
@@ -231,8 +277,6 @@ public static class BasicExporterExtension {
         } else {
           stream.Write($"{color.NonStrokeColor[0]} {color.NonStrokeColor[1]} {color.NonStrokeColor[2]} {color.NonStrokeColor[3]} k\n".ToUTF8());
         }
-        break;
-      default:
         break;
     }
     return new PdfExporterResults();
