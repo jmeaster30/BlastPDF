@@ -1,8 +1,6 @@
 using System.Text;
-using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using JsonConverter = Newtonsoft.Json.JsonConverter;
 
 namespace BlastIMG.ImageLoaders;
 
@@ -103,15 +101,5 @@ static class MyExtensions {
             13 => CompressionMethod.BI_CMYKRLE4,
             _ => throw new ArgumentException("Unknown Bitmap Compression Method", nameof(method))
         };
-    }
-    
-    public static byte[] ReadBytes(this Stream stream, int fileOffset, int count)
-    {
-        var buffer = new byte[count];
-        stream.Seek(fileOffset, SeekOrigin.Begin);
-        var bytesRead = stream.Read(buffer, 0, count);
-        if (bytesRead != count)
-            Console.Error.WriteLine("Didn't read the correct amount of bytes");
-        return buffer;
     }
 }

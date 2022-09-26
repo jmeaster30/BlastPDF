@@ -8,10 +8,7 @@ public class ImageParsingExample
 {
     public static void Run(string imagePath)
     {
-        var loaded = BmpLoader.Load(imagePath);
-        
-        Console.WriteLine($"Loaded: {imagePath}");
-        Console.WriteLine($"Width: {loaded.Width}");
-        Console.WriteLine($"Height: {loaded.Height}");
+        Console.WriteLine($"Loading: {imagePath}");
+        var loaded = QoiLoader.Load(imagePath);
     }
 }
