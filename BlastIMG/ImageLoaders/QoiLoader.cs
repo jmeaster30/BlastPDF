@@ -5,14 +5,14 @@ namespace BlastIMG.ImageLoaders;
 
 class QoiHeader
 {
-    public string MagicNumber { get; set; }
-    public uint Width { get; set; }
-    public uint Height { get; set; }
-    public byte Channels { get; set; }
-    public byte ColorSpace { get; set; }
+    public string MagicNumber { get; init; } = "";
+    public uint Width { get; init; }
+    public uint Height { get; init; }
+    public byte Channels { get; init; }
+    public byte ColorSpace { get; init; }
 }
 
-public static class QoiLoader
+public class QoiLoader : IImageLoader
 {
     public static Image Load(string filename)
     {
@@ -27,6 +27,13 @@ public static class QoiLoader
             Channels = headerBytes[12],
             ColorSpace = headerBytes[13]
         };
+
+        if (parsedHeader.MagicNumber != "qoif")
+        {
+            throw new ArgumentException(
+                $"'{filename}' is not a QOI image. Expected magic number 'qoif' but got '{parsedHeader.MagicNumber}'",
+                nameof(filename));
+        }
 
         var pixels = new List<Pixel>();
         var index = new Pixel?[64];
@@ -91,9 +98,9 @@ public static class QoiLoader
         }
 
         var pixelData = new Pixel[parsedHeader.Width, parsedHeader.Height];
-        for (int y = 0; y < parsedHeader.Height; y++)
+        for (var y = 0; y < parsedHeader.Height; y++)
         {
-            for (int x = 0; x < parsedHeader.Width; x++)
+            for (var x = 0; x < parsedHeader.Width; x++)
             {
                 var pixelIndex = (int)(x + y * parsedHeader.Width);
                 var pixel = pixels[pixelIndex];
@@ -117,10 +124,10 @@ public static class QoiLoader
         return (pixel.R * 3 + pixel.G * 5 + pixel.B * 7 + pixel.A * 11) % 64;
     }
 
-    private static List<Pixel> MakeCopies(Pixel pixel, int count)
+    private static IEnumerable<Pixel> MakeCopies(Pixel pixel, int count)
     {
         var results = new List<Pixel>();
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
             results.Add(pixel);
         }

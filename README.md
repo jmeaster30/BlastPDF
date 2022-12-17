@@ -7,13 +7,22 @@ A C# library for PDF parsing and editing
 
 ### BlastPDF
 
-This project houses the core library code
+A PDF generation, parsing, and editing library
 
-### BlastPDF.Test
+### BlastSharp
 
-This project contains unit tests for the BlastPDF Library
+Random things I wanted to have or try to make
+
+#### BlastPDF.Test
+
+Unit tests for the BlastPDF library
+
+### BlastIMG
+
+An image decoding library
 
 ### ShowCase
 
-This project contains examples that lets you see what this library can do
+Meant for the purpose of experimenting with this library while developing.
 
+This will eventually house several more projects that can will show off what BlastPDF and BlastIMG can do.

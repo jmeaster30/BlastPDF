@@ -7,7 +7,8 @@ public enum FileFormat
     BMP,
     PNG,
     JPEG,
-    QOI
+    QOI,
+    GIF
 }
 
 public struct Pixel
@@ -44,6 +45,7 @@ public class Image
         {
             FileFormat.BMP => BmpLoader.Load(imagePath),
             FileFormat.QOI => QoiLoader.Load(imagePath),
+            FileFormat.GIF => GifLoader.Load(imagePath),
             _ => throw new NotImplementedException("Format not currently supported :(")
         };
 }

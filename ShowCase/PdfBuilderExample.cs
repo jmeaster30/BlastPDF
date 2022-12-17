@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using BlastIMG;
 using BlastPDF.Builder;
 using BlastPDF.Builder.Graphics;
 using BlastPDF.Builder.Graphics.Drawing;
@@ -37,7 +38,7 @@ public class PdfBuilderExample
                 .DotsPerInch(100)
                 .Width(10)
                 .Height(10)
-                .AddResource("GoodImage", PdfImage.FromFile("cat.png", PdfColorSpace.DeviceRGB))
+                .AddResource("GoodImage", PdfImage.FromFile("cat.png", FileFormat.PNG, PdfColorSpace.DeviceRGB))
                 .AddGraphics(PdfGraphicsObject.Create()
                     .SetCMYK(0.0M, 0.0M, 1.0M, 0.0M)
                     .Rect(0, 0, 1000, 1000)

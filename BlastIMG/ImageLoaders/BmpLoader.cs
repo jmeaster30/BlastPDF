@@ -41,7 +41,7 @@ class BitmapInfoHeader
     public int ImportantColors { get; set; }
 }
 
-public static class BmpLoader
+public class BmpLoader : IImageLoader
 {
     public static Image Load(string filepath)
     {
@@ -84,7 +84,7 @@ public static class BmpLoader
     }
 }
 
-static class MyExtensions {
+static class BmpLoaderExtensions {
     public static CompressionMethod GetCompressionMethod(this int method)
     {
         return method switch
