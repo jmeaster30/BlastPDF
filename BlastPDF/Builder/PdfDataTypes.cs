@@ -41,19 +41,9 @@ public static class PdfFilterExtensions
         return a;
     }
 
-    public static byte[] ASCIIHexEncode(this byte[] input)
+    public static IEnumerable<byte> ASCIIHexEncode(this IEnumerable<byte> input)
     {
-        List<byte> contents = new();
-        foreach (var b in input)
-        {
-            contents.AddRange(new List<byte>
-            {
-                ToHex(b / 16),
-                ToHex(b % 16)
-            });
-        }
-
-        return contents.ToArray();
+        return input.SelectMany(x => new List<byte> {ToHex(x / 16), ToHex(x % 16)});
     }
 
     public static IEnumerable<byte> ASCII85Encode(this IEnumerable<byte> input)
