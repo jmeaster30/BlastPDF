@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BlastIMG\BlastIMG.csproj" />
+    <ProjectReference Include="..\BlastSharp\BlastSharp.csproj"/>
   </ItemGroup>
 
 </Project>
