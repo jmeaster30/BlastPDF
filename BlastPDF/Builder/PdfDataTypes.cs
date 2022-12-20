@@ -28,6 +28,24 @@ public static class PdfFilterExtensions
         return (byte)(b < 10 ? b + 48 : b + 55);
     }
 
+    public static IEnumerable<byte> Encode(this IEnumerable<byte> input, PdfFilter decodeType)
+    {
+        return decodeType switch
+        {
+            PdfFilter.ASCIIHexDecode => input.ASCIIHexEncode(),
+            PdfFilter.ASCII85Decode => input.ASCII85Encode(),
+            PdfFilter.LZWDecode => throw new NotImplementedException(),
+            PdfFilter.FlateDeode => throw new NotImplementedException(),
+            PdfFilter.RunLengthDecode => input.RunLengthEncode(),
+            PdfFilter.CCITTFaxDecode => throw new NotImplementedException(),
+            PdfFilter.JBIG2Decode => throw new NotImplementedException(),
+            PdfFilter.DCTDecode => throw new NotImplementedException(),
+            PdfFilter.JPXDecode => throw new NotImplementedException(),
+            PdfFilter.Crypt => throw new NotImplementedException(),
+            _ => throw new ArgumentOutOfRangeException(nameof(decodeType), decodeType, "Unsupported PDF Filter :(")
+        };
+    }
+
     public static IEnumerable<byte> ASCIIHexEncode(this IEnumerable<byte> input)
     {
         return input.SelectMany(x => new List<byte> {ToHex(x / 16), ToHex(x % 16)});
@@ -55,6 +73,44 @@ public static class PdfFilterExtensions
         
         return results.Take(results.Count() - (4 - input.Count() % 4));
     }
-    
-    
+
+    public static IEnumerable<byte> RunLengthEncode(this IEnumerable<byte> input)
+    {
+        // decoding
+        // length byte -> run
+        // if length is 0 to 127 then copy next length + 1 bytes literally
+        // if length is 129 to 255 then the next single byte should be copied 257 - length times
+        // length of 128 is EOD
+        
+        // encoding
+        // group same bytes into groups of (byte value, run length)
+        // group groups of run length = 1 into chunks of 128
+        // if run length is greater than 1
+            // emit {257 - run length, byte value}
+        // if run length is equal to 1
+            // emit {length, chunked bytes}
+        // add byte 128 to end
+
+        var groups = input.RunGroupBy(x => x, 128);
+        
+        var chunks = new List<(IEnumerable<byte>, int)>();
+        foreach (var g in groups)
+        {
+            Console.WriteLine($"byte: {Convert.ToInt32(g.Item1)} run length: {g.Item2}");
+            var current = chunks.LastOrDefault();
+            if(chunks.Count > 0 && g.Item2 == 1 && current.Item2 == 1 && current.Item1.Count() < 128)
+            {
+                Console.WriteLine("Append");
+                current.Item1 = current.Item1.Append(g.Item1);
+            }
+            else
+            {
+                Console.WriteLine("New Chunk");
+                chunks.Add((new []{g.Item1}, g.Item2));
+            }
+        }
+
+        return chunks.SelectMany(x =>
+            x.Item1.Prepend(x.Item2 == 1 ? (byte) (x.Item1.Count() - 1) : (byte) (257 - x.Item2))).Append((byte)128);
+    }
 }
