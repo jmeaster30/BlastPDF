@@ -1,50 +1,25 @@
+using System.Text;
+using BlastSharp.Compression;
 using BlastSharp.Streams;
 
 namespace BlastSharp;
 
 public class BlastSharp
 {
-    public static Stream FromString(string s)
+    public static byte[] FromString(string s)
     {
-        var stream = new MemoryStream();
-        var writer = new StreamWriter(stream);
-        writer.Write(s);
-        writer.Flush();
-        stream.Position = 0;
-        return stream;
+        return Encoding.ASCII.GetBytes(s);
     }
-
-    public static void PrintContents(string name, Stream s)
+    
+    public static string ToString(IEnumerable<byte> s)
     {
-        Console.Write($"{name}: '");
-        s.Position = 0;
-        while (s.Position < s.Length)
-        {
-            Console.Write(Convert.ToChar((byte)s.ReadByte()));
-        }
-        Console.WriteLine("'");
+        return Encoding.ASCII.GetString(s.ToArray());
     }
     
     public static void Main(string[] args)
     {
-        var stream = FromString("This is my stream :)");
-        var filtered = stream.Filter(x => x is >= 97 and <= 122);
-        var readTransform = stream.TransformOnRead(x => x == 32 ? (byte) 126 : x);
-
-        var baseStream = new MemoryStream();
-        var writeTransform = baseStream.TransformOnWrite(x => (byte)(x + 1));
-        var writer = new StreamWriter(writeTransform);
-        writer.Write("This is my stream :)");
-        writer.Flush();
-        stream.Position = 0;
-
-        var chained = writeTransform.Filter(x => x != '!').TransformOnRead(x => (byte) (x - 1));
-        
-        PrintContents("Original", stream);
-        PrintContents("Filtered", filtered);
-        PrintContents("ReadTransform", readTransform);
-        PrintContents("BaseStream", baseStream);
-        PrintContents("WriteTransform", writeTransform);
-        PrintContents("Chained", chained);
+        var compressor = new Ascii85();
+        var result = ToString(compressor.Decode(compressor.Encode(FromString(@"Man is distinguished, not only by his reason, but by this singular passion from other animals, which is a lust of the mind, that by a perseverance of delight in the continued and indefatigable generation of knowledge, exceeds the short vehemence of any carnal pleasure."))));
+        Console.WriteLine($"Ascii 85 Encode/Decode: '{result}'");
     }
 }
