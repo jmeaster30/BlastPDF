@@ -36,7 +36,6 @@ public class Ascii85 : ICompressionAlgorithm
         {
             throw new ArgumentException("Sequence must end in a '~>'.", nameof(input));
         }
-        Console.WriteLine(Encoding.ASCII.GetString(filtered.ToArray()));
         
         var contents = filtered.Take(filtered.Count() - 2);
         if (contents.Any(x => x is not (>= 33 and <= 117) or 122))
