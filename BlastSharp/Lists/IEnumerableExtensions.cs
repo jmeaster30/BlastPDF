@@ -33,4 +33,15 @@ public static class EnumerableExtensions {
         if (current.Item2 > 0) result.Add(current);
         return result;
     }
+
+    public static IEnumerable<T> Repeat<T>(this T value, int amount)
+    {
+        var results = new List<T>();
+        while (results.Count < amount)
+        {
+            results.Add(value);
+        }
+
+        return results;
+    }
 }

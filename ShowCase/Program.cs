@@ -16,19 +16,24 @@ public class Program {
     //ImageParsingExample.Run("../../../images/qoi/testcard.qoi");
     //ImageParsingExample.Run("../../../images/qoi/testcard_rgba.qoi");
     //ImageParsingExample.Run("../../../images/qoi/wikipedia_008.qoi");
-    var bytes = Encoding.ASCII.GetBytes(
-        ")))))))))))))))))))))))))))))))))))))))))");
-    var encoded  = bytes.Encode(PdfFilter.RunLengthDecode);
+    var bytes = Encoding.ASCII.GetBytes("aaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbccccccccccccccccc");
+    var encoded  = PdfFilter.RunLength.Encode(bytes);
+    var decoded = PdfFilter.RunLength.Decode(encoded);
     
-    Console.WriteLine($"hello????? {bytes.Count()} {encoded.Count()}");
+    Console.WriteLine($"hello????? {bytes.Count()} {encoded.Count()} {decoded.Count()}");
     foreach (var b in bytes)
     {
       Console.Write(Convert.ToChar(b));
     }
-    Console.WriteLine("\nDone");
+    Console.WriteLine("\nEncoded");
     foreach (var b in encoded)
     {
-      Console.WriteLine(Convert.ToInt32(b));
+      Console.Write(Convert.ToChar(b));
+    }
+    Console.WriteLine("\nDecoded");
+    foreach (var b in decoded)
+    {
+      Console.Write(Convert.ToChar(b));
     }
   }
 }

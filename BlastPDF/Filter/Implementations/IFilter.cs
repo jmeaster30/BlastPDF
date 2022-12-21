@@ -1,4 +1,6 @@
-namespace BlastSharp.Compression;
+using System.Collections.Generic;
+
+namespace BlastPDF.Filter.Implementations;
 
 public interface ICompressionAlgorithm
 {

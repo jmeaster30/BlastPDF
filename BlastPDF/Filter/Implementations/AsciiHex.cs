@@ -1,6 +1,8 @@
-using System.Text;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace BlastSharp.Compression;
+namespace BlastPDF.Filter.Implementations;
 
 public class AsciiHex : ICompressionAlgorithm
 {
