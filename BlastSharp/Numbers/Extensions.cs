@@ -16,4 +16,9 @@ public static class Extensions
     {
         return (int)Math.Floor(value);
     }
+
+    public static int Ceiling(this double value)
+    {
+        return (int) Math.Ceiling(value);
+    }
 }

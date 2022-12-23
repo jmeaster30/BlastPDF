@@ -21,15 +21,13 @@ public enum PdfFilter
 
 public static class PdfFilterExtensions
 {
-    
-
-    private static IFilterAlgorithm Get(this PdfFilter decodeType)
+    private static IFilterAlgorithm Get(this PdfFilter decodeType, IFilterParameters parameters)
     {
         return decodeType switch
         {
             PdfFilter.ASCIIHex => new AsciiHex(),
             PdfFilter.ASCII85 => new Ascii85(),
-            PdfFilter.LZW => throw new NotImplementedException(),
+            PdfFilter.LZW => new Lzw(parameters as LzwParameters),
             PdfFilter.Flate => throw new NotImplementedException(),
             PdfFilter.RunLength => new RunLength(),
             PdfFilter.CCITTFax => throw new NotImplementedException(),
@@ -41,9 +39,9 @@ public static class PdfFilterExtensions
         };
     }
 
-    public static IEnumerable<byte> Encode(this PdfFilter filter, IEnumerable<byte> input) =>
-        filter.Get().Encode(input);
+    public static IEnumerable<byte> Encode(this PdfFilter filter, IEnumerable<byte> input, IFilterParameters parameters = null) =>
+        filter.Get(parameters).Encode(input);
     
-    public static IEnumerable<byte> Decode(this PdfFilter filter, IEnumerable<byte> input) =>
-        filter.Get().Decode(input);
+    public static IEnumerable<byte> Decode(this PdfFilter filter, IEnumerable<byte> input, IFilterParameters parameters = null) =>
+        filter.Get(parameters).Decode(input);
 }

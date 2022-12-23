@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using BlastSharp.Lists;
@@ -8,25 +7,20 @@ namespace BlastPDF.Filter.Implementations;
 
 public class LzwParameters : IFilterParameters
 {
-    public int Predictor { get; set; }
-    public int Colors { get; set; }
-    public int BitsPerComponent { get; set; }
-    public int Columns { get; set; }
-    public int EarlyChange { get; set; }
+    public int Predictor { get; set; } = 1;
+    public int Colors { get; set; } = 1;
+    public int BitsPerComponent { get; set; } = 8;
+    public int Columns { get; set; } = 1;
+    public int EarlyChange { get; set; } = 1;
 }
 
 public class Lzw : IFilterAlgorithm
 {
-    private LzwParameters LzwParameters { get; } = new()
-    {
-        Predictor = 1,
-        Colors = 1,
-        BitsPerComponent = 8,
-        Columns = 1,
-        EarlyChange = 1,
-    };
+    // FIXME actually utilize this parameters :)
+    private LzwParameters LzwParameters { get; } = new();
 
-    private Dictionary<byte[], int> codewords { get; set; } = new();
+    private Dictionary<string, int> codewords { get; set; } = new();
+    private Dictionary<int, byte[]> values { get; set; } = new();
 
     public Lzw(LzwParameters parameters)
     {
@@ -47,30 +41,62 @@ public class Lzw : IFilterAlgorithm
 
     private int GetCodeword(byte[] input)
     {
-        return codewords[input];
+        return codewords[input.Hash()];
     }
 
     private bool ContainsCodeword(byte[] input)
     {
-        return codewords.ContainsKey(input);
+        return codewords.ContainsKey(input.Hash());
     }
 
     private void InsertCodeword(byte[] input, int code)
     {
-        codewords[input] = code;
+        codewords[input.Hash()] = code;
     }
-    
-    public IEnumerable<byte> Encode(IEnumerable<byte> input)
+
+    private (int, int) ClearCodewords()
     {
-        // table: code -> bits, value
         for (int i = 0; i < 256; i++)
         {
             InsertCodeword(new[] {(byte) i}, i);
         }
         // 256 is the clear table marker
         // 257 is the EOD marker
-        var currentCodeValue = 258;
-        var currentCodeLength = 9;
+        return (EOD + 1, 9);
+    }
+    
+    private (int, int) ClearValues()
+    {
+        for (int i = 0; i < 256; i++)
+        {
+            InsertValue(i, new[] {(byte) i});
+        }
+        // 256 is the clear table marker
+        // 257 is the EOD marker
+        return (EOD + 1, 9);
+    }
+    
+    private byte[] GetValue(int input)
+    {
+        return values[input];
+    }
+
+    private bool ContainsValue(int input)
+    {
+        return values.ContainsKey(input);
+    }
+
+    private void InsertValue(int input, byte[] value)
+    {
+        values[input] = value;
+    }
+
+    private const int EOD = 257;
+    private const int CLEAR_TABLE = 256;
+
+    public IEnumerable<byte> Encode(IEnumerable<byte> input)
+    {
+        var (currentCodeValue, currentCodeLength) = ClearCodewords();
 
         var buffer = new[]{input.First()};
         var result = new BitList();
@@ -94,7 +120,6 @@ public class Lzw : IFilterAlgorithm
                     currentCodeValue += 1;
                 }
                 
-                
                 buffer = new[] {b};
                 if (currentCodeValue < 4096)
                 {
@@ -107,32 +132,69 @@ public class Lzw : IFilterAlgorithm
             }
         }
         result.AppendBits(GetCodeword(buffer), currentCodeLength);
+        result.AppendBits(EOD, currentCodeLength); // insert end of data
 
         return result.ToByteArray();
     }
 
+    private static int GetBits(BitList inputBits, int offset, int amount)
+    {
+        var bits = inputBits.ReadBits(offset, amount).PadLeft(4, (byte) 0);
+        if (BitConverter.IsLittleEndian)
+            bits = bits.Reverse();
+        return BitConverter.ToInt32(bits.ToArray());
+    }
+
     public IEnumerable<byte> Decode(IEnumerable<byte> input)
     {
-        // enter all letters into table
-        for (int i = 0; i < 256; i++)
-        {
-            InsertCodeword(new[] {(byte) i}, i);
-        }
-        // 256 is the clear table marker
-        // 257 is the EOD marker
-        var currentCodeValue = 258;
-        var currentCodeLength = 9;
+        var (currentCodeValue, currentCodeLength) = ClearValues();
+        var currentBitOffset = 0;
+
+        var inputBits = new BitList(input);
+        var result = new List<byte>();
         
-        // read prior code word
+        var priorCodeWord = GetBits(inputBits, currentBitOffset, currentCodeLength);
         // output prior code word
-        // foreach codeword in input
-        //      if codeword is not in table 
-        //          enter in table string(priorcodeword) + firstchar(string(priorcodeword))
-        //          output string(priorcodeword) + firstchar(string(priorcodeword))
-        //      else
-        //          enter in table string(priorcodeword) + firstchar(string(codeword))
-        //          output string(codeword)
-        //      priorcodeword = codeword
-        throw new System.NotImplementedException();
+        // FIXME The algorithm is supposed to output the prior code here but it was adding one more character than it should have
+        //result.AddRange(GetValue(priorCodeWord));
+        
+        currentBitOffset += currentCodeLength;
+        while (currentBitOffset < inputBits.Count)
+        {
+            var codeword = GetBits(inputBits, currentBitOffset, currentCodeLength);
+
+            if (codeword == EOD)
+            {
+                break;
+            }
+            // TODO handle clear table
+
+            if (ContainsValue(codeword))
+            {
+                InsertValue(currentCodeValue, GetValue(priorCodeWord).Append(GetValue(codeword)[0]).ToArray());
+                currentCodeValue += 1;
+                
+                result.AddRange(GetValue(codeword));
+            }
+            else
+            {
+                InsertValue(currentCodeValue, GetValue(priorCodeWord).Append(GetValue(priorCodeWord)[0]).ToArray());
+                currentCodeValue += 1;
+                
+                result.AddRange(GetValue(priorCodeWord).Append(GetValue(priorCodeWord)[0]));
+            }
+            priorCodeWord = codeword;
+            if (currentCodeValue < 4096)
+            {
+                currentCodeLength += currentCodeValue switch
+                {
+                    512 or 1024 or 2048 => 1,
+                    _ => 0
+                };
+            }
+            currentBitOffset += currentCodeLength;
+        }
+        
+        return result;
     }
 }

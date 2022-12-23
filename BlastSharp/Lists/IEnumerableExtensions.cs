@@ -56,4 +56,10 @@ public static class EnumerableExtensions {
 
         return results;
     }
+
+    public static string Hash(this IEnumerable<byte> input)
+    {
+        using var md5 = System.Security.Cryptography.MD5.Create();
+        return Convert.ToHexString(md5.ComputeHash(input.ToArray()));
+    }
 }

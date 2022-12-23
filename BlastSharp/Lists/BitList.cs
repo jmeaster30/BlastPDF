@@ -1,10 +1,29 @@
 using System.Collections;
+using BlastSharp.Numbers;
 
 namespace BlastSharp.Lists;
 
 public class BitList : IEnumerable
 {
-    private List<bool> Contents { get; set; }
+    private List<bool> Contents { get; set; } = new();
+
+    public BitList()
+    {}
+    
+    public BitList(IEnumerable<byte> contents)
+    {
+        Contents = contents.SelectMany(x =>
+        {
+            var res = new List<bool>();
+            for (int i = 7; i >= 0; i--)
+            {
+                res.Add(((x >> i) & 1) == 1);
+            }
+            return res;
+        }).ToList();
+    }
+
+    public int Count => Contents.Count;
 
     public IEnumerator GetEnumerator()
     {
@@ -15,7 +34,7 @@ public class BitList : IEnumerable
     {
         for (int shift = bitLength - 1; shift >= 0; shift--)
         {
-            Contents.Append(((value >> shift) & 1) == 1);
+            Contents.Add(((value >> shift) & 1) == 1);
         }
     }
 
@@ -24,9 +43,28 @@ public class BitList : IEnumerable
         Contents.RemoveRange(Contents.Count - amount, amount);
     }
 
+    public byte[] ReadBits(int index, int count)
+    {
+        try
+        {
+            var value = Contents.GetRange(index, count);
+            return ToByteArray(value.PadLeft((value.Count / 8.0).Ceiling() * 8, false));
+        }
+        catch
+        {
+            Console.WriteLine($"Count: {Contents.Count} Offset: {index} Amount: {count}");
+            throw;
+        }
+    }
+
     public byte[] ToByteArray()
     {
-        return Contents.Chunk(8)
+        return ToByteArray(Contents);
+    }
+    
+    private static byte[] ToByteArray(IEnumerable<bool> value)
+    {
+        return value.Chunk(8)
             .Select(x => x.Length < 8 ? x.PadRight(8, false) : x)
             .Select(source =>
             {
