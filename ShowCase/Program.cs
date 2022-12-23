@@ -12,11 +12,11 @@ public class Program {
     //ImageParsingExample.Run("../../../images/qoi/dice.qoi");
     //ImageParsingExample.Run("../../../images/qoi/kodim10.qoi");
     //ImageParsingExample.Run("../../../images/qoi/kodim23.qoi");
-    //ImageParsingExample.Run("../../../images/qoi/qoi_logo.qoi");
+    ImageParsingExample.Run("../../../images/bmp/w3c_home.bmp");
     //ImageParsingExample.Run("../../../images/qoi/testcard.qoi");
     //ImageParsingExample.Run("../../../images/qoi/testcard_rgba.qoi");
     //ImageParsingExample.Run("../../../images/qoi/wikipedia_008.qoi");
-    var bytes = Encoding.ASCII.GetBytes("aaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbccccccccccccccccc");
+    /*var bytes = Encoding.ASCII.GetBytes("aaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbccccccccccccccccc");
     var encoded  = PdfFilter.RunLength.Encode(bytes);
     var decoded = PdfFilter.RunLength.Decode(encoded);
     
@@ -34,7 +34,7 @@ public class Program {
     foreach (var b in decoded)
     {
       Console.Write(Convert.ToChar(b));
-    }
+    }*/
   }
 }
 

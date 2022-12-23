@@ -12,6 +12,18 @@ public static class EnumerableExtensions {
         
         return a;
     }
+    
+    public static IEnumerable<T> PadLeft<T>(this IEnumerable<T> a, int amount, T value)
+    {
+        int toAdd = amount - a.Count();
+        if (toAdd <= 0) return a;
+        for (int i = 0; i < toAdd; i++)
+        {
+            a = a.Prepend(value);
+        }
+        
+        return a;
+    }
 
     // TODO I feel like this API could be better :/
     public static IEnumerable<(T, int)> RunGroupBy<T, U>(this IEnumerable<T> input, Func<T, U> selector, int maxChunkSize)

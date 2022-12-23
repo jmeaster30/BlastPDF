@@ -5,7 +5,7 @@ using BlastSharp.Lists;
 
 namespace BlastPDF.Filter.Implementations;
 
-public class RunLength : ICompressionAlgorithm
+public class RunLength : IFilterAlgorithm
 {
     public IEnumerable<byte> Encode(IEnumerable<byte> input)
     {

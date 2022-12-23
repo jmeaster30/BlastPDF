@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace BlastPDF.Filter.Implementations;
 
-public class AsciiHex : ICompressionAlgorithm
+public class AsciiHex : IFilterAlgorithm
 {
     private static byte ToHex(int b)
     {

@@ -5,7 +5,7 @@ using BlastSharp.Lists;
 
 namespace BlastPDF.Filter.Implementations;
 
-public class Ascii85 : ICompressionAlgorithm
+public class Ascii85 : IFilterAlgorithm
 {
     public IEnumerable<byte> Encode(IEnumerable<byte> input)
     {

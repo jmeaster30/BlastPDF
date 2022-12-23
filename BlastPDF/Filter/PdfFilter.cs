@@ -23,7 +23,7 @@ public static class PdfFilterExtensions
 {
     
 
-    private static ICompressionAlgorithm Get(this PdfFilter decodeType)
+    private static IFilterAlgorithm Get(this PdfFilter decodeType)
     {
         return decodeType switch
         {
