@@ -64,9 +64,8 @@ public class BitList : IEnumerable
     
     private static byte[] ToByteArray(IEnumerable<bool> value)
     {
-        return value.Chunk(8)
-            .Select(x => x.Length < 8 ? x.PadRight(8, false) : x)
-            .Select(source =>
+        return value.PadRight((value.Count() / 8.0).Ceiling() * 8, false)
+            .Chunk(8).Select(source =>
             {
                 byte result = 0;
                 var index = 8 - source.Count();

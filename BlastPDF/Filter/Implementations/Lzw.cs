@@ -24,19 +24,17 @@ public class Lzw : IFilterAlgorithm
 
     public Lzw(LzwParameters parameters)
     {
-        if (parameters != null)
-        {
-            if (parameters.Predictor is not (1 or 2 or 10 or 11 or 12 or 13 or 14 or 15))
-                throw new ArgumentOutOfRangeException(nameof(parameters.Predictor), "Predictor should be 1, 2, 10, 11, 12, 13, 14, or 15.");
-            if (parameters.Colors < 1)
-                throw new ArgumentOutOfRangeException(nameof(parameters.Colors), "Colors must be greater than or equal to 1.");
-            if (parameters.BitsPerComponent is not (1 or 2 or 4 or 8 or 16))
-                throw new ArgumentOutOfRangeException(nameof(parameters.BitsPerComponent),
-                    "BitsPerComponent must be 1, 2, 4, 8, or 16.");
-            if (parameters.EarlyChange is not 1 and not 2)
-                throw new ArgumentOutOfRangeException(nameof(parameters.EarlyChange), "EarlyChange must be 0 or 1.");
-            LzwParameters = parameters;
-        }
+        if (parameters == null) return;
+        if (parameters.Predictor is not (1 or 2 or 10 or 11 or 12 or 13 or 14 or 15))
+            throw new ArgumentOutOfRangeException(nameof(parameters.Predictor), "Predictor should be 1, 2, 10, 11, 12, 13, 14, or 15.");
+        if (parameters.Colors < 1)
+            throw new ArgumentOutOfRangeException(nameof(parameters.Colors), "Colors must be greater than or equal to 1.");
+        if (parameters.BitsPerComponent is not (1 or 2 or 4 or 8 or 16))
+            throw new ArgumentOutOfRangeException(nameof(parameters.BitsPerComponent),
+                "BitsPerComponent must be 1, 2, 4, 8, or 16.");
+        if (parameters.EarlyChange is not 1 and not 2)
+            throw new ArgumentOutOfRangeException(nameof(parameters.EarlyChange), "EarlyChange must be 0 or 1.");
+        LzwParameters = parameters;
     }
 
     private int GetCodeword(byte[] input)
@@ -60,8 +58,6 @@ public class Lzw : IFilterAlgorithm
         {
             InsertCodeword(new[] {(byte) i}, i);
         }
-        // 256 is the clear table marker
-        // 257 is the EOD marker
         return (EOD + 1, 9);
     }
     
@@ -71,8 +67,6 @@ public class Lzw : IFilterAlgorithm
         {
             InsertValue(i, new[] {(byte) i});
         }
-        // 256 is the clear table marker
-        // 257 is the EOD marker
         return (EOD + 1, 9);
     }
     
@@ -98,7 +92,7 @@ public class Lzw : IFilterAlgorithm
     {
         var (currentCodeValue, currentCodeLength) = ClearCodewords();
 
-        var buffer = new[]{input.First()};
+        var buffer = new byte[]{};
         var result = new BitList();
 
         foreach (var b in input)
@@ -113,22 +107,23 @@ public class Lzw : IFilterAlgorithm
                 var codeword = GetCodeword(buffer);
                 result.AppendBits(codeword, currentCodeLength);
                 
-                // TODO Emit a clear table marker when we hit the max code value
-                if (currentCodeValue < 4096)
+                InsertCodeword(combined, currentCodeValue);
+                currentCodeValue += 1;
+                if (currentCodeValue == 4096)
                 {
-                    InsertCodeword(combined, currentCodeValue);
-                    currentCodeValue += 1;
+                    Console.WriteLine("Emitted!!!");
+                    result.AppendBits(CLEAR_TABLE, currentCodeLength);
+                    buffer = Array.Empty<byte>();
+                    (currentCodeValue, currentCodeLength) = ClearCodewords();
+                    continue;
                 }
                 
                 buffer = new[] {b};
-                if (currentCodeValue < 4096)
+                currentCodeLength += currentCodeValue switch
                 {
-                    currentCodeLength += currentCodeValue switch
-                    {
-                        512 or 1024 or 2048 => 1,
-                        _ => 0
-                    };
-                }
+                    512 or 1024 or 2048 => 1,
+                    _ => 0
+                };
             }
         }
         result.AppendBits(GetCodeword(buffer), currentCodeLength);
@@ -155,44 +150,52 @@ public class Lzw : IFilterAlgorithm
         
         var priorCodeWord = GetBits(inputBits, currentBitOffset, currentCodeLength);
         // output prior code word
-        // FIXME The algorithm is supposed to output the prior code here but it was adding one more character than it should have
-        //result.AddRange(GetValue(priorCodeWord));
+        result.AddRange(GetValue(priorCodeWord));
         
         currentBitOffset += currentCodeLength;
         while (currentBitOffset < inputBits.Count)
         {
             var codeword = GetBits(inputBits, currentBitOffset, currentCodeLength);
-
+            
             if (codeword == EOD)
             {
                 break;
             }
-            // TODO handle clear table
+            
+            if (codeword == CLEAR_TABLE)
+            {
+                currentBitOffset += currentCodeLength;
+                (currentCodeValue, currentCodeLength) = ClearValues();
+                priorCodeWord = GetBits(inputBits, currentBitOffset, currentCodeLength);
+                result.AddRange(GetValue(priorCodeWord));
+                currentBitOffset += currentCodeLength;
+                continue;
+            }
 
             if (ContainsValue(codeword))
             {
                 InsertValue(currentCodeValue, GetValue(priorCodeWord).Append(GetValue(codeword)[0]).ToArray());
                 currentCodeValue += 1;
-                
+
                 result.AddRange(GetValue(codeword));
             }
             else
             {
                 InsertValue(currentCodeValue, GetValue(priorCodeWord).Append(GetValue(priorCodeWord)[0]).ToArray());
                 currentCodeValue += 1;
-                
+
                 result.AddRange(GetValue(priorCodeWord).Append(GetValue(priorCodeWord)[0]));
             }
-            priorCodeWord = codeword;
+            priorCodeWord = codeword; 
+            currentBitOffset += currentCodeLength;
             if (currentCodeValue < 4096)
             {
                 currentCodeLength += currentCodeValue switch
                 {
-                    512 or 1024 or 2048 => 1,
+                    511 or 1023 or 2047 => 1,
                     _ => 0
                 };
             }
-            currentBitOffset += currentCodeLength;
         }
         
         return result;
