@@ -57,6 +57,27 @@ public static class EnumerableExtensions {
         return results;
     }
 
+    public static (int, T?, T?) FirstDifference<T>(this IEnumerable<T> left, IEnumerable<T> right) where T : struct
+    {
+        var index = 0;
+        T? lResult = null;
+        T? rResult = null;
+        for (; index < left.Count(); index++)
+        {
+            lResult = left.ElementAt(index);
+            rResult = index < right.Count() ? right.ElementAt(index) : null;
+            if (rResult == null) break;
+            if (!EqualityComparer<T>.Default.Equals(lResult.Value, rResult.Value)) break;
+        }
+
+        if (index == left.Count() && index == right.Count())
+        {
+            return (-1, null, null);
+        }
+        
+        return (index, lResult, rResult);
+    }
+
     public static string Hash(this IEnumerable<byte> input)
     {
         using var md5 = System.Security.Cryptography.MD5.Create();

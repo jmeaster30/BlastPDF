@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Text;
 using BlastPDF.Builder;
+using BlastSharp.Lists;
 
 namespace ShowCase;
 
@@ -840,35 +841,8 @@ public class Program {
     var decoded = PdfFilter.LZW.Decode(encoded);
     
     Console.WriteLine($"hello????? {bytes.Count()} {encoded.Count()} {decoded.Count()}");
-    /*foreach (var b in bytes)
-    {
-      Console.Write(Convert.ToChar(b));
-    }
-    Console.WriteLine("");
-    
-    Console.WriteLine("ENCODED");
-    foreach (var b in encoded)
-    {
-      Console.Write($"{b} ");
-    }
-    Console.WriteLine("\nDECODED");
-    foreach (var b in decoded)
-    {
-      Console.Write(Convert.ToChar(b));
-    }
-    Console.WriteLine();*/
-    var failed = false;
-    var zipped = bytes.Zip(decoded);
-    for (var i = 0; i < zipped.Count(); i++)
-    {
-      var pair = zipped.ElementAt(i);
-      if (pair.Item1 == pair.Item2) continue;
-      Console.WriteLine($"[{i}] {pair.Item1} -> {pair.Item2}");
-      failed = true;
-      break;
-    }
-
-    Console.WriteLine(failed ? "Failed :(" : "Success :)");
+    var (diffOffset, leftDiff, rightDiff) = bytes.FirstDifference(decoded);
+    Console.WriteLine(diffOffset == -1 ? "SUCCESS" : $"[{diffOffset}] {leftDiff} != {rightDiff}");
   }
 }
 
