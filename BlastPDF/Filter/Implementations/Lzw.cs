@@ -54,6 +54,7 @@ public class Lzw : IFilterAlgorithm
 
     private (int, int) ClearCodewords()
     {
+        codewords = new();
         for (int i = 0; i < 256; i++)
         {
             InsertCodeword(new[] {(byte) i}, i);
@@ -63,6 +64,7 @@ public class Lzw : IFilterAlgorithm
     
     private (int, int) ClearValues()
     {
+        values = new();
         for (int i = 0; i < 256; i++)
         {
             InsertValue(i, new[] {(byte) i});
@@ -111,9 +113,8 @@ public class Lzw : IFilterAlgorithm
                 currentCodeValue += 1;
                 if (currentCodeValue == 4096)
                 {
-                    Console.WriteLine("Emitted!!!");
                     result.AppendBits(CLEAR_TABLE, currentCodeLength);
-                    buffer = Array.Empty<byte>();
+                    buffer = new[] {b};
                     (currentCodeValue, currentCodeLength) = ClearCodewords();
                     continue;
                 }
@@ -165,6 +166,7 @@ public class Lzw : IFilterAlgorithm
             if (codeword == CLEAR_TABLE)
             {
                 currentBitOffset += currentCodeLength;
+                if (currentBitOffset >= inputBits.Count) break;
                 (currentCodeValue, currentCodeLength) = ClearValues();
                 priorCodeWord = GetBits(inputBits, currentBitOffset, currentCodeLength);
                 result.AddRange(GetValue(priorCodeWord));
@@ -176,14 +178,14 @@ public class Lzw : IFilterAlgorithm
             {
                 InsertValue(currentCodeValue, GetValue(priorCodeWord).Append(GetValue(codeword)[0]).ToArray());
                 currentCodeValue += 1;
-
+                
                 result.AddRange(GetValue(codeword));
             }
             else
             {
                 InsertValue(currentCodeValue, GetValue(priorCodeWord).Append(GetValue(priorCodeWord)[0]).ToArray());
                 currentCodeValue += 1;
-
+                
                 result.AddRange(GetValue(priorCodeWord).Append(GetValue(priorCodeWord)[0]));
             }
             priorCodeWord = codeword; 
