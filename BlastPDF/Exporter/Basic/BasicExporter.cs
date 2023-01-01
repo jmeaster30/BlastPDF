@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BlastIMG;
 using BlastPDF.Exporter.Util;
 using BlastPDF.Builder;
 using BlastPDF.Builder.Graphics;
 using BlastPDF.Builder.Graphics.Drawing;
+using BlastSharp.Lists;
 
 namespace BlastPDF.Exporter.Basic;
 
@@ -151,23 +153,12 @@ public static class BasicExporterExtension {
   {
     return pdfObject switch
     {
-      PdfImage image => image.Export(stream, objectNumber),
       PdfGraphicsObject graphics => graphics.Export(stream, objectNumber),
       _ => throw new Exception("Unhandled subtype of PdfObject")
     };
   }
 
-  private static PdfExporterResults Export(this PdfImage pdfImage, Stream stream, int objectNumber)
-  {
-    return pdfImage switch
-    {
-      PdfEmbeddedImage embed => embed.Export(stream, objectNumber),
-      PdfExternalImage external => throw new NotImplementedException("URL images are not supported yet :("),
-      _ => throw new Exception("Unhandled subtype of PdfImage")
-    };
-  }
-
-  private static PdfExporterResults Export(this PdfEmbeddedImage embed, Stream stream, int objectNumber)
+  /*private static PdfExporterResults Export(this PdfEmbeddedImage embed, Stream stream, int objectNumber)
   {
     stream.Write($"{objectNumber} 0 obj\n".ToUTF8());
     stream.Write("<<\n/Type /XObject\n/Subtype /Image\n".ToUTF8());
@@ -178,7 +169,7 @@ public static class BasicExporterExtension {
     stream.Write(embed.ImageData);
     stream.Write("\nendstream\nendobj\n".ToUTF8());
     return new PdfExporterResults();
-  }
+  }*/
 
   private static PdfExporterResults Export(this PdfGraphicsObject graphicsObject, Stream stream, int objectNumber) {
     // TODO I have a feeling this could still be better
@@ -201,11 +192,55 @@ public static class BasicExporterExtension {
       case PdfRenderingIntent intent: return intent.Export(stream, objectNumber);
       case PdfResetGraphicsState reset: return reset.Export(stream, objectNumber);
       case PdfXObject xobj: return xobj.Export(stream, objectNumber);
+      case PdfInlineImage image: return image.Export(stream, objectNumber);
     }
 
     foreach (var obj in graphicsObject.SubObjects) {
       obj.Export(stream, objectNumber);
     }
+    return new PdfExporterResults();
+  }
+
+  private static PdfExporterResults Export(this PdfInlineImage image, Stream stream, int objectNumber)
+  {
+    Console.WriteLine("HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    stream.Write("BI\n".ToUTF8());
+    stream.Write($"\t/W {image.Width}\n".ToUTF8());
+    stream.Write($"\t/H {image.Height}\n".ToUTF8());
+    // TODO this should be extracted to an extension function
+    var colorSpaceString = image.ColorSpace switch
+    {
+      PdfColorSpace.DeviceGray => "G",
+      PdfColorSpace.DeviceRGB => "RGB",
+      PdfColorSpace.DeviceCMYK => "CMYK",
+      _ => throw new NotImplementedException(),
+    };
+    stream.Write($"\t/CS /{colorSpaceString}\n".ToUTF8());
+    stream.Write($"\t/BPC {image.BitsPerComponent}\n".ToUTF8());
+    var filterNames = image.Filters.Select(x => x switch
+    {
+      PdfFilter.ASCII85 => "/A85",
+      PdfFilter.ASCIIHex => "/AHx",
+      PdfFilter.LZW => "/LZW",
+      PdfFilter.RunLength => "/RL",
+      _ => throw new NotImplementedException()
+    }).Join(" ");
+    stream.Write($"\t/F [{filterNames}]\n".ToUTF8());
+    stream.Write("ID\n".ToUTF8());
+
+    IEnumerable<byte> imageData = image.ImageData.GetColorArray(image.ColorSpace switch
+    {
+      PdfColorSpace.DeviceGray => ColorFormat.GRAY,
+      PdfColorSpace.DeviceRGB => ColorFormat.RGB,
+      PdfColorSpace.DeviceCMYK => ColorFormat.CMYK,
+      _ => throw new NotImplementedException(),
+    });
+
+    imageData = image.Filters.Reverse().Aggregate(imageData, (current, filter) => filter.Encode(current));
+
+    stream.Write(imageData.ToArray());
+    
+    stream.Write("\nEI\n".ToUTF8());
     return new PdfExporterResults();
   }
 

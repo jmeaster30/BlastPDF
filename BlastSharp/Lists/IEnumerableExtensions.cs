@@ -83,4 +83,18 @@ public static class EnumerableExtensions {
         using var md5 = System.Security.Cryptography.MD5.Create();
         return Convert.ToHexString(md5.ComputeHash(input.ToArray()));
     }
+
+    public static string Join(this IEnumerable<string> input, string sep)
+    {
+        var s = "";
+        for (var i = 0; i < input.Count(); i++)
+        {
+            s += input.ElementAt(i);
+            if (i < input.Count() - 1)
+            {
+                s += sep;
+            }
+        }
+        return s;
+    }
 }
