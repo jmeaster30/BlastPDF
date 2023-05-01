@@ -91,6 +91,7 @@ public static class BasicExporterExtension {
       nextStart += 1;
     }
     // build page resource dictionary
+    crossReferences.Add((nextStart, stream.Position));
     stream.Write($"{nextStart} 0 obj\n".ToUTF8());
     stream.Write("<< /ProcSet [/PDF /Text /ImageB /ImageC /ImageI]\n".ToUTF8());
     stream.Write("/XObject <<\n".ToUTF8());
@@ -100,6 +101,8 @@ public static class BasicExporterExtension {
     }
     // Font's will be in a different sub dictionary in this resource section
     stream.Write(">>\n>>\nendobj\n".ToUTF8());
+
+    nextStart += 1;
     
     foreach(var obj in page.Objects) {
       contentRefs.Add(nextStart);
@@ -143,6 +146,7 @@ public static class BasicExporterExtension {
       stream.Write($"{contentRef} 0 R\n".ToUTF8());
     }
     stream.Write("]\n".ToUTF8());
+    stream.Write("/Resources << >>\n".ToUTF8());
     stream.Write(">>\n".ToUTF8());
     stream.Write("endobj\n\n".ToUTF8());
 

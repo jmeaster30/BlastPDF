@@ -16,20 +16,36 @@ public class PdfBuilderExample
             File.Delete(outputPdfName);
         }
         
-        using FileStream fs = File.Create(outputPdfName);
+        using var fs = File.Create(outputPdfName);
         PdfDocument.Create()
             .AddPage(PdfPage.Create()
                 .DotsPerInch(100)
                 .Width(10)
                 .Height(10)
-                .AddGraphics(PdfGraphicsObject.Create()
-                    .SetCMYK(0.0M, 0.0M, 1.0M, 0.0M)
-                    .Rect(0, 0, 1000, 1000)
-                    .Paint(PaintModeEnum.CloseFillStroke))
+                //.AddGraphics(PdfGraphicsObject.Create()
+                //    .SetCMYK(0.0M, 0.0M, 1.0M, 0.0M)
+                //    .Rect(0, 0, 1000, 1000)
+                //    .Paint(PaintModeEnum.CloseFillStroke))
                 .AddGraphics(PdfGraphicsObject.Create()
                     .Translate(250, 702)
                     .Scale(50.0M, 50.0M)
-                    .InlineImage("../../../images/bmp/w3c_home.bmp", FileFormat.BMP)))
-            .Save(fs);
+                    .InlineImage("../../../images/bmp/w3c_home.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.ASCII85}))
+                .AddGraphics(PdfGraphicsObject.Create()
+                    .Translate(300, 702)
+                    .Scale(50.0M, 50.0M)
+                    .InlineImage("../../../images/bmp/w3c_home.bmp", FileFormat.BMP)) // ASCIIHex
+                .AddGraphics(PdfGraphicsObject.Create()
+                    .Translate(350, 702)
+                    .Scale(50.0M, 50.0M)
+                    .InlineImage("../../../images/bmp/w3c_home.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.LZW}))
+                .AddGraphics(PdfGraphicsObject.Create()
+                    .Translate(400, 702)
+                    .Scale(50.0M, 50.0M)
+                    .InlineImage("../../../images/bmp/w3c_home.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.ASCII85, PdfFilter.LZW}))
+                .AddGraphics(PdfGraphicsObject.Create()
+                    .Translate(450, 702)
+                    .Scale(100.0M, 100.0M)
+                    .InlineImage("../../../images/bmp/cat.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.ASCIIHex, PdfFilter.LZW}))
+                ).Save(fs);
     }
 }

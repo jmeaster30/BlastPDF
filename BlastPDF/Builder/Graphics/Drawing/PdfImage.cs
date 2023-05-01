@@ -26,11 +26,12 @@ public class PdfInlineImage : PdfGraphicsObject
       ColorSpace = colorSpace,
       BitsPerComponent = 8, // TODO I would like this to be figured out from the pixel format in the image
       ImageData = image,
+      Filters = filters,
     };
 
     if (filters is null)
     {
-      result.Filters = new[] {PdfFilter.ASCII85, PdfFilter.LZW};
+      result.Filters = new[] {PdfFilter.ASCIIHex};
     }
 
     return result;

@@ -17,12 +17,16 @@ public class Program {
     //ImageParsingExample.Run("../../../images/qoi/testcard.qoi");
     //ImageParsingExample.Run("../../../images/qoi/testcard_rgba.qoi");
     //ImageParsingExample.Run("../../../images/qoi/wikipedia_008.qoi");
-    //var bytes = Encoding.ASCII.GetBytes(@"i did it :)");
-    //var encoded  = PdfFilter.LZW.Encode(bytes);
-    //var decoded = PdfFilter.LZW.Decode(encoded);
+    var bytes = Encoding.ASCII.GetBytes(@"i did it :)");
+    var encoded  = PdfFilter.ASCII85.Encode(bytes);
+    var decoded = PdfFilter.ASCII85.Decode(encoded);
+    
+    Console.WriteLine($"bytes   '{Encoding.ASCII.GetString(bytes.ToArray())}'");
+    Console.WriteLine($"encoded '{Encoding.ASCII.GetString(encoded.ToArray())}'");
+    Console.WriteLine($"decoded '{Encoding.ASCII.GetString(decoded.ToArray())}'");
 
-    //var (diffOffset, leftDiff, rightDiff) = bytes.FirstDifference(decoded);
-    //Console.WriteLine(diffOffset == -1 ? "SUCCESS" : $"[{diffOffset}] {leftDiff} != {rightDiff}");
+    var (diffOffset, leftDiff, rightDiff) = bytes.FirstDifference(decoded);
+    Console.WriteLine(diffOffset == -1 ? "SUCCESS" : $"[{diffOffset}] {leftDiff} != {rightDiff}");
   }
 }
 

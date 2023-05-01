@@ -145,7 +145,7 @@ public class BmpLoader : IImageLoader
         if (parsedDibHeader.CompressionMethod is not CompressionMethod.BI_RGB and not CompressionMethod.BI_CMYK)
         {
             throw new NotImplementedException(
-                "I have not implemented compression methods other than BI_RGB and BI_CMYK for bitmap files :(");
+                $"I have not implemented compression methods other than BI_RGB and BI_CMYK for bitmap files :( ---- Found Compression Method {parsedDibHeader.CompressionMethod}");
         }
         
         // color table
