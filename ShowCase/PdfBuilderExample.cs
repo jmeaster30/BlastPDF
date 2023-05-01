@@ -26,6 +26,8 @@ public class PdfBuilderExample
                 //    .SetCMYK(0.0M, 0.0M, 1.0M, 0.0M)
                 //    .Rect(0, 0, 1000, 1000)
                 //    .Paint(PaintModeEnum.CloseFillStroke))
+                .AddGraphics(PdfTextObject.Create()
+                    .ShowText("Holy crap Louis"))
                 .AddGraphics(PdfGraphicsObject.Create()
                     .Translate(250, 702)
                     .Scale(50.0M, 50.0M)

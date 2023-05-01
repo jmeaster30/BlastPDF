@@ -14,4 +14,8 @@
     <ProjectReference Include="..\BlastSharp\BlastSharp.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Builder\Graphics\Text\" />
+  </ItemGroup>
+
 </Project>

@@ -197,11 +197,34 @@ public static class BasicExporterExtension {
       case PdfResetGraphicsState reset: return reset.Export(stream, objectNumber);
       case PdfXObject xobj: return xobj.Export(stream, objectNumber);
       case PdfInlineImage image: return image.Export(stream, objectNumber);
+      case PdfTextObject text: return text.Export(stream, objectNumber);
     }
 
     foreach (var obj in graphicsObject.SubObjects) {
       obj.Export(stream, objectNumber);
     }
+    return new PdfExporterResults();
+  }
+  
+  private static PdfExporterResults Export(this PdfTextObject textObject, Stream stream, int objectNumber) {
+    // TODO I have a feeling this could still be better
+    switch (textObject)
+    {
+      case PdfShowText showText: return showText.Export(stream, objectNumber);
+      case PdfShowTextNextLine showTextNextLine: return showTextNextLine.Export(stream, objectNumber);
+      case PdfShowTextSpacingNextLine showTextSpacingNextLine: return showTextSpacingNextLine.Export(stream, objectNumber);
+      case PdfShowTextList showTextList: return showTextList.Export(stream, objectNumber);
+      case PdfNextLine nextLine: return nextLine.Export(stream, objectNumber);
+      case PdfNextLineOffset nextLineOffset: return nextLineOffset.Export(stream, objectNumber);
+      case PdfNextLineOffsetLeading nextLineOffsetLeading: return nextLineOffsetLeading.Export(stream, objectNumber);
+      case PdfTextTransform nextLineTextTransform: return nextLineTextTransform.Export(stream, objectNumber);
+    }
+    
+    stream.Write("BT\n".ToUTF8());
+    foreach (var obj in textObject.SubObjects) {
+      obj.Export(stream, objectNumber);
+    }
+    stream.Write("ET\n".ToUTF8());
     return new PdfExporterResults();
   }
 
@@ -325,6 +348,11 @@ public static class BasicExporterExtension {
     stream.Write($"{transform.Value[0]} {transform.Value[1]} {transform.Value[2]} {transform.Value[3]} {transform.Value[4]} {transform.Value[5]} cm\n".ToUTF8());
     return new PdfExporterResults();
   }
+  
+  private static PdfExporterResults Export(this PdfTextTransform transform, Stream stream, int objectNumber) {
+    stream.Write($"{transform.Value[0]} {transform.Value[1]} {transform.Value[2]} {transform.Value[3]} {transform.Value[4]} {transform.Value[5]} cm\n".ToUTF8());
+    return new PdfExporterResults();
+  }
 
   private static PdfExporterResults Export(this PdfLineWidth lineWidth, Stream stream, int objectNumber) {
     stream.Write($"{lineWidth.Width} w\n".ToUTF8());
@@ -333,20 +361,20 @@ public static class BasicExporterExtension {
 
   private static PdfExporterResults Export(this PdfLineCapStyle lineCapStyle, Stream stream, int objectNumber) {
     stream.Write(lineCapStyle.LineCapStyle switch {
-      LineCapStyle.SquareButt => $"0 J\n".ToUTF8(),
-      LineCapStyle.Round => $"1 J\n".ToUTF8(),
-      LineCapStyle.ProjectingSquare => $"2 J\n".ToUTF8(),
-      _ => $"0 J\n".ToUTF8()
+      LineCapStyle.SquareButt => "0 J\n".ToUTF8(),
+      LineCapStyle.Round => "1 J\n".ToUTF8(),
+      LineCapStyle.ProjectingSquare => "2 J\n".ToUTF8(),
+      _ => "0 J\n".ToUTF8()
     });
     return new PdfExporterResults();
   }
 
   private static PdfExporterResults Export(this PdfLineJoinStyle joinStyle, Stream stream, int objectNumber) {
     stream.Write(joinStyle.LineJoinStyle switch {
-      LineJoinStyle.Mitered => $"0 J\n".ToUTF8(),
-      LineJoinStyle.Round => $"1 J\n".ToUTF8(),
-      LineJoinStyle.Bevel => $"2 J\n".ToUTF8(),
-      _ => $"0 J\n".ToUTF8()
+      LineJoinStyle.Mitered => "0 J\n".ToUTF8(),
+      LineJoinStyle.Round => "1 J\n".ToUTF8(),
+      LineJoinStyle.Bevel => "2 J\n".ToUTF8(),
+      _ => "0 J\n".ToUTF8()
     });
     return new PdfExporterResults();
   }
@@ -375,12 +403,47 @@ public static class BasicExporterExtension {
     stream.Write("q\n".ToUTF8());
     return new PdfExporterResults();
   }
+  
+  private static PdfExporterResults Export(this PdfShowText showText, Stream stream, int objectNumber) {
+    stream.Write($"({showText.Value}) Tj\n".ToUTF8());
+    return new PdfExporterResults();
+  }
+  
+  private static PdfExporterResults Export(this PdfShowTextNextLine showText, Stream stream, int objectNumber) {
+    stream.Write($"({showText.Value}) '\n".ToUTF8());
+    return new PdfExporterResults();
+  }
+  
+  private static PdfExporterResults Export(this PdfShowTextSpacingNextLine showText, Stream stream, int objectNumber) {
+    stream.Write($"{showText.Width} ({showText.Value}) \"\n".ToUTF8());
+    return new PdfExporterResults();
+  }
+  
+  private static PdfExporterResults Export(this PdfShowTextList showText, Stream stream, int objectNumber)
+  {
+    throw new NotImplementedException("Export show text list");
+  }
+  
+  private static PdfExporterResults Export(this PdfNextLine nextLine, Stream stream, int objectNumber) {
+    stream.Write($"T*\n".ToUTF8());
+    return new PdfExporterResults();
+  }
+  
+  private static PdfExporterResults Export(this PdfNextLineOffset nextLine, Stream stream, int objectNumber) {
+    stream.Write($"{nextLine.OffsetX} {nextLine.OffsetY} Td\n".ToUTF8());
+    return new PdfExporterResults();
+  }
+  
+  private static PdfExporterResults Export(this PdfNextLineOffsetLeading nextLine, Stream stream, int objectNumber) {
+    stream.Write($"{nextLine.OffsetX} {nextLine.OffsetY} TD\n".ToUTF8());
+    return new PdfExporterResults();
+  }
 
 }
 
 internal class PdfExporterResults {
-  public List<(int, long)> ObjectNumberByteOffsets = new List<(int, long)>();
-  public List<int> PageRefNumber = new List<int>();
+  public List<(int, long)> ObjectNumberByteOffsets = new();
+  public List<int> PageRefNumber = new();
 
   public void AddObject(int objectNumber, long byteOffset) {
     ObjectNumberByteOffsets.Add((objectNumber, byteOffset));
