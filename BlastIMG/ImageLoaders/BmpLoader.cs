@@ -28,8 +28,33 @@ public class BitmapFileHeader
     public int PixelArrayOffset { get; set; }
 }
 
+public class XYZTriple
+{
+    public int RedX { get; set; }
+    public int RedY { get; set; }
+    public int RedZ { get; set; }
+    public int GreenX { get; set; }
+    public int GreenY { get; set; }
+    public int GreenZ { get; set; }
+    public int BlueX { get; set; }
+    public int BlueY { get; set; }
+    public int BlueZ { get; set; }
+}
+
 public class BitmapInfoHeader
-{ 
+{
+    public string HeaderType => HeaderSize switch
+    {
+        12 => "BITMAPCOREHEADER",
+        64 => "OS22XBITMAPHEADER",
+        16 => "OS22XBITMAPHEADER",
+        40 => "BITMAPINFOHEADER",
+        52 => "BITMAPV2INFOHEADER",
+        56 => "BITMAPV3INFOHEADER",
+        108 => "BITMAPV4HEADER",
+        124 => "BITMAPV5HEADER",
+        _ => throw new ArgumentException($"Unexpected header size {HeaderSize}", nameof(HeaderSize))
+    };
     public int HeaderSize { get; set; }
     public int BitmapWidth { get; set; }
     public int BitmapHeight { get; set; }
@@ -41,6 +66,19 @@ public class BitmapInfoHeader
     public int VerticalResolution { get; set; } // ppm 
     public int ColorPalette { get; set; } // 0 for all
     public int ImportantColors { get; set; }
+    public int RedMask { get; set; }
+    public int GreenMask { get; set; }
+    public int BlueMask { get; set; }
+    public int AlphaMask { get; set; }
+    public int CSType { get; set; }
+    public XYZTriple Endpoints { get; set; }
+    public int GammaRed { get; set; }
+    public int GammaGreen { get; set; }
+    public int GammaBlue { get; set; }
+    public int Intent { get; set; }
+    public int ProfileData { get; set; }
+    public int ProfileSize { get; set; }
+    public int Reserved { get; set; }
 }
 
 public class BmpLoader : IImageLoader
@@ -65,10 +103,34 @@ public class BmpLoader : IImageLoader
             padded = padded.Reverse();
         return padded.ToArray();
     }
+
+    private static int GetShift(int mask)
+    {
+        int c = 32; // c will be the number of zero bits on the right
+        mask &= -mask;
+        if (mask != 0) c--;
+        if ((mask & 0x0000FFFF) != 0) c -= 16;
+        if ((mask & 0x00FF00FF) != 0) c -= 8;
+        if ((mask & 0x0F0F0F0F) != 0) c -= 4;
+        if ((mask & 0x33333333) != 0) c -= 2;
+        if ((mask & 0x55555555) != 0) c -= 1;
+        return c;
+    }
     
     private static Pixel GetColor(byte[] rowBytes, int column, int row, BitmapInfoHeader header, Pixel[] colorTable)
     {
         var pixelValue = BitConverter.ToInt32(GetBytesByBPPIndex(rowBytes, column, header.BitsPerPixel));
+        if (header.CompressionMethod == CompressionMethod.BI_BITFIELDS)
+        {
+            return new Pixel {
+                R = (byte)((pixelValue & header.RedMask) >> GetShift(header.RedMask)),
+                G = (byte)((pixelValue & header.GreenMask) >> GetShift(header.GreenMask)),
+                B = (byte)((pixelValue & header.BlueMask) >> GetShift(header.BlueMask)),
+                A = (byte)((pixelValue & header.AlphaMask) >> GetShift(header.AlphaMask)),
+                X = column,
+                Y = row
+            };
+        }
         return header.BitsPerPixel switch
         {
             <= 8 => new Pixel
@@ -141,11 +203,51 @@ public class BmpLoader : IImageLoader
             ColorPalette = BitConverter.ToInt32(dibHeader[32..36]),
             ImportantColors = BitConverter.ToInt32(dibHeader[36..40]),
         };
+        
+        if (parsedDibHeader.HeaderSize == 124) 
+        {
+            parsedDibHeader.RedMask = BitConverter.ToInt32(dibHeader[40..44]);
+            parsedDibHeader.GreenMask = BitConverter.ToInt32(dibHeader[44..48]);
+            parsedDibHeader.BlueMask = BitConverter.ToInt32(dibHeader[48..52]);
+            parsedDibHeader.AlphaMask = BitConverter.ToInt32(dibHeader[52..56]);
+            parsedDibHeader.CSType = BitConverter.ToInt32(dibHeader[56..60]);
+            parsedDibHeader.Endpoints = new()
+            {
+                RedX = BitConverter.ToInt32(dibHeader[60..64]),
+                RedY = BitConverter.ToInt32(dibHeader[64..68]),
+                RedZ = BitConverter.ToInt32(dibHeader[68..72]),
+                GreenX = BitConverter.ToInt32(dibHeader[72..76]),
+                GreenY = BitConverter.ToInt32(dibHeader[76..80]),
+                GreenZ = BitConverter.ToInt32(dibHeader[80..84]),
+                BlueX = BitConverter.ToInt32(dibHeader[84..88]),
+                BlueY = BitConverter.ToInt32(dibHeader[88..92]),
+                BlueZ = BitConverter.ToInt32(dibHeader[92..96]),
+            };
+            parsedDibHeader.GammaRed = BitConverter.ToInt32(dibHeader[96..100]);
+            parsedDibHeader.GammaGreen = BitConverter.ToInt32(dibHeader[100..104]);
+            parsedDibHeader.GammaBlue = BitConverter.ToInt32(dibHeader[104..108]);
+            parsedDibHeader.Intent = BitConverter.ToInt32(dibHeader[108..112]);
+            parsedDibHeader.ProfileData = BitConverter.ToInt32(dibHeader[112..116]);
+            parsedDibHeader.ProfileSize = BitConverter.ToInt32(dibHeader[116..120]);
+            parsedDibHeader.Reserved = BitConverter.ToInt32(dibHeader[120..124]);
+        } 
+        else if (parsedDibHeader.HeaderSize != 40)
+        {
+            throw new NotImplementedException($"I have not implemented header '{parsedDibHeader.HeaderType}'");
+        }
 
-        if (parsedDibHeader.CompressionMethod is not CompressionMethod.BI_RGB and not CompressionMethod.BI_CMYK)
+        Console.Out.WriteLine($"{parsedFileHeader.MagicNumber}");
+        Console.Out.WriteLine($"{parsedFileHeader.FileSize}");
+        Console.Out.WriteLine($"{parsedFileHeader.PixelArrayOffset}");
+        Console.Out.WriteLine($"Width: {parsedDibHeader.BitmapWidth}");
+        Console.Out.WriteLine($"Height: {parsedDibHeader.BitmapHeight}");
+        Console.Out.WriteLine(JsonConvert.SerializeObject(parsedDibHeader, Formatting.Indented, new JsonConverter[] {new StringEnumConverter()}));
+
+        // There has to be a better way
+        if (parsedDibHeader.CompressionMethod is not CompressionMethod.BI_RGB and not CompressionMethod.BI_CMYK and not CompressionMethod.BI_BITFIELDS)
         {
             throw new NotImplementedException(
-                $"I have not implemented compression methods other than BI_RGB and BI_CMYK for bitmap files :( ---- Found Compression Method {parsedDibHeader.CompressionMethod}");
+                $"I have not implemented compression methods other than BI_RGB, BI_CMYK, and BI_BITFIELDS for bitmap files :( ---- Found Compression Method {parsedDibHeader.CompressionMethod}");
         }
         
         // color table
@@ -157,17 +259,10 @@ public class BmpLoader : IImageLoader
             for (var i = 0; i < parsedDibHeader.ColorPalette; i++)
             {
                 var color = imageFile.ReadBytes(colorTableOffset + i * colorTableEntrySize, colorTableEntrySize);
-                colorTable[i] = new Pixel{ R = color[0], G = color[1], B = color[2], A = color[3] };
+                colorTable[i] = new Pixel { R = color[0], G = color[1], B = color[2], A = color[3] };
             }
         }
-         
-        Console.Out.WriteLine($"{parsedFileHeader.MagicNumber}");
-        Console.Out.WriteLine($"{parsedFileHeader.FileSize}");
-        Console.Out.WriteLine($"{parsedFileHeader.PixelArrayOffset}");
-        Console.Out.WriteLine($"Width: {parsedDibHeader.BitmapWidth}");
-        Console.Out.WriteLine($"Height: {parsedDibHeader.BitmapHeight}");
-        Console.Out.WriteLine(JsonConvert.SerializeObject(parsedDibHeader, Formatting.Indented, new JsonConverter[] {new StringEnumConverter()}));
-
+        
         var resultImage = new Image
         {
             Format = FileFormat.BMP,
