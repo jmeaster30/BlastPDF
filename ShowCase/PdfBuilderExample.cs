@@ -27,8 +27,10 @@ public class PdfBuilderExample
                 //    .Rect(0, 0, 1000, 1000)
                 //    .Paint(PaintModeEnum.CloseFillStroke))
                 .AddGraphics(PdfTextObject.Create()
-                    .ShowText("Holy crap Louis"))
-                .AddGraphics(PdfGraphicsObject.Create()
+                    .SetFont("F1", 24)
+                    .NextLineOffset(100, 100)
+                    .ShowText("I HAVE DONE IT FINALLY!!!!!"))
+                /*.AddGraphics(PdfGraphicsObject.Create()
                     .Translate(250, 702)
                     .Scale(50.0M, 50.0M)
                     .InlineImage("../../../images/bmp/w3c_home.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.ASCII85}))
@@ -44,9 +46,10 @@ public class PdfBuilderExample
                     .Translate(400, 702)
                     .Scale(50.0M, 50.0M)
                     .InlineImage("../../../images/bmp/w3c_home.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.ASCII85, PdfFilter.LZW}))
+                */
                 .AddGraphics(PdfGraphicsObject.Create()
-                    .Translate(450, 702)
-                    .Scale(100.0M, 100.0M)
+                    .Translate(200, 200)
+                    .Scale(600.0M, 600.0M)
                     .InlineImage("../../../images/bmp/cat.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.ASCIIHex, PdfFilter.LZW}))
                 ).Save(fs);
     }

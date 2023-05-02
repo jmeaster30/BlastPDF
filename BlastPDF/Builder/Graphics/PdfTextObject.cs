@@ -13,6 +13,54 @@ public class PdfTextObject : PdfGraphicsObject
     }
 }
 
+public class PdfCharacterSpacing : PdfTextObject
+{
+    public decimal CharSpace { get; set; }
+}
+
+public class PdfWordSpacing : PdfTextObject
+{
+    public decimal WordSpace { get; set; }
+}
+
+public class PdfTextHorizontalScale : PdfTextObject
+{
+    public decimal Scale { get; set; }
+}
+
+public class PdfTextLeading : PdfTextObject
+{
+    public decimal Leading { get; set; }
+}
+
+public class PdfSetFont : PdfTextObject
+{
+    public decimal FontSize { get; set; }
+    public string FontName { get; set; }
+}
+
+public enum PdfTextRenderingMode
+{
+    Fill,
+    Stroke,
+    FillStroke,
+    Invisible,
+    FillClip,
+    StrokeClip,
+    FillStrokeClip,
+    Clip,
+}
+
+public class PdfSetTextRenderingMode : PdfTextObject
+{
+    public PdfTextRenderingMode Mode { get; set; }
+}
+
+public class PdfTextRise : PdfTextObject
+{
+    public decimal Amount { get; set; }
+}
+
 public class PdfShowText : PdfTextObject
 {
     public string Value { get; set; }
@@ -88,6 +136,14 @@ public class PdfTextTransform : PdfTextObject
 
 public static class PdfTextObjectExtensions
 {
+    public static PdfTextObject GetTextObject(this PdfGraphicsObject obj)
+    {
+        if (obj is not PdfTextObject textObject)
+        {
+            throw new ArgumentException("Not a text object :(");
+        }
+        return textObject;
+    }
     public static PdfTextObject ShowText(this PdfTextObject text, string value)
     {
         text.SubObjects.Add(new PdfShowText
@@ -124,7 +180,7 @@ public static class PdfTextObjectExtensions
     
     public static PdfTextObject NextLineOffset(this PdfTextObject text, int xOffset, int yOffset)
     {
-        text.SubObjects.Add(new PdfNextLineOffset()
+        text.SubObjects.Add(new PdfNextLineOffset
         {
             OffsetX = xOffset,
             OffsetY = yOffset,
@@ -134,7 +190,7 @@ public static class PdfTextObjectExtensions
     
     public static PdfTextObject NextLineOffsetLeading(this PdfTextObject text, int xOffset, int yOffset)
     {
-        text.SubObjects.Add(new PdfNextLineOffsetLeading()
+        text.SubObjects.Add(new PdfNextLineOffsetLeading
         {
             OffsetX = xOffset,
             OffsetY = yOffset,
@@ -159,6 +215,70 @@ public static class PdfTextObjectExtensions
 
     public static PdfTextObject Skew(this PdfTextObject text, decimal angle_a, decimal angle_b) {
         text.SubObjects.Add(PdfTextTransform.Skew(angle_a, angle_b));
+        return text;
+    }
+
+    public static PdfTextObject CharacterSpacing(this PdfTextObject text, decimal spacing)
+    {
+        text.SubObjects.Add(new PdfCharacterSpacing
+        {
+            CharSpace = spacing,
+        });
+        return text;
+    }
+
+    public static PdfTextObject WordSpacing(this PdfTextObject text, decimal spacing)
+    {
+        text.SubObjects.Add(new PdfWordSpacing
+        {
+            WordSpace = spacing,
+        });
+        return text;
+    }
+    
+    public static PdfTextObject TextHorizontalScale(this PdfTextObject text, decimal scale)
+    {
+        text.SubObjects.Add(new PdfTextHorizontalScale
+        {
+            Scale = scale,
+        });
+        return text;
+    }
+    
+    public static PdfTextObject TextLeading(this PdfTextObject text, decimal leading)
+    {
+        text.SubObjects.Add(new PdfTextLeading
+        {
+            Leading = leading,
+        });
+        return text;
+    }
+
+    public static PdfTextObject SetFont(this PdfTextObject text, string fontName, decimal size)
+    {
+        text.SubObjects.Add(new PdfSetFont
+        {
+            FontName = fontName,
+            FontSize = size,
+        });
+        return text;
+    }
+
+    public static PdfTextObject TextRenderingMode(this PdfTextObject text, PdfTextRenderingMode mode)
+    {
+        text.SubObjects.Add(new PdfSetTextRenderingMode
+        {
+            Mode = mode,
+        });
+        return text;
+    }
+
+    public static PdfTextObject TextRise(this PdfTextObject text, decimal amount)
+    {
+        text.SubObjects.Add(new PdfTextRise
+        {
+            Amount = amount
+        });
         return text;
     }
 }

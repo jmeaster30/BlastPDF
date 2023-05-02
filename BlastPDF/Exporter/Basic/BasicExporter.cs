@@ -8,6 +8,7 @@ using BlastPDF.Builder;
 using BlastPDF.Builder.Graphics;
 using BlastPDF.Builder.Graphics.Drawing;
 using BlastSharp.Lists;
+using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 
 namespace BlastPDF.Exporter.Basic;
 
@@ -82,6 +83,19 @@ public static class BasicExporterExtension {
     var contentRefs = new List<int>();
     var nextStart = objectNumber;
     
+    // TODO Must allow more than one font
+    crossReferences.Add((nextStart, stream.Position));
+    stream.Write($"{nextStart} 0 obj\n".ToUTF8());
+    stream.Write("<<\n".ToUTF8());
+    stream.Write("/Type /Font\n".ToUTF8());
+    stream.Write("/SubType /Type\n".ToUTF8());
+    stream.Write("/Name /Default\n".ToUTF8());
+    stream.Write("/BaseFont /Helvetica\n".ToUTF8());
+    stream.Write("/Encoding /WinAnsiEncoding\n".ToUTF8());
+    stream.Write(">>\nendobj\n".ToUTF8());
+    var fontResourceStart = nextStart;
+    nextStart += 1;
+    
     // export the page resources
     List<(string, int)> x_objects = new();
     foreach (var res in page.Resources)
@@ -91,6 +105,7 @@ public static class BasicExporterExtension {
       nextStart += 1;
     }
     // build page resource dictionary
+    var pageResources = nextStart;
     crossReferences.Add((nextStart, stream.Position));
     stream.Write($"{nextStart} 0 obj\n".ToUTF8());
     stream.Write("<< /ProcSet [/PDF /Text /ImageB /ImageC /ImageI]\n".ToUTF8());
@@ -100,7 +115,11 @@ public static class BasicExporterExtension {
       stream.Write($"/{xobj.Item1} {xobj.Item2} 0 R\n".ToUTF8());
     }
     // Font's will be in a different sub dictionary in this resource section
-    stream.Write(">>\n>>\nendobj\n".ToUTF8());
+    stream.Write(">>\n".ToUTF8());
+    stream.Write("/Font <<\n".ToUTF8());
+    stream.Write($"/F1 {fontResourceStart} 0 R\n".ToUTF8()); // TODO Must allow more than one font
+    stream.Write(">>\n".ToUTF8());
+    stream.Write(">>\nendobj\n".ToUTF8());
 
     nextStart += 1;
     
@@ -131,6 +150,8 @@ public static class BasicExporterExtension {
       //  nextStart = refs.ObjectNumberByteOffsets.Select(x => x.Item1).OrderBy(x => x).FirstOrDefault() + 1;
       //}
     }
+    
+    
 
     results.AddObjects(crossReferences);
 
@@ -146,7 +167,7 @@ public static class BasicExporterExtension {
       stream.Write($"{contentRef} 0 R\n".ToUTF8());
     }
     stream.Write("]\n".ToUTF8());
-    stream.Write("/Resources << >>\n".ToUTF8());
+    stream.Write($"/Resources {pageResources} 0 R\n".ToUTF8());
     stream.Write(">>\n".ToUTF8());
     stream.Write("endobj\n\n".ToUTF8());
 
@@ -218,6 +239,13 @@ public static class BasicExporterExtension {
       case PdfNextLineOffset nextLineOffset: return nextLineOffset.Export(stream, objectNumber);
       case PdfNextLineOffsetLeading nextLineOffsetLeading: return nextLineOffsetLeading.Export(stream, objectNumber);
       case PdfTextTransform nextLineTextTransform: return nextLineTextTransform.Export(stream, objectNumber);
+      case PdfCharacterSpacing characterSpacing: return characterSpacing.Export(stream, objectNumber);
+      case PdfWordSpacing wordSpacing: return wordSpacing.Export(stream, objectNumber);
+      case PdfTextHorizontalScale horizontalScale: return horizontalScale.Export(stream, objectNumber);
+      case PdfTextLeading textLeading: return textLeading.Export(stream, objectNumber);
+      case PdfSetFont setFont: return setFont.Export(stream, objectNumber);
+      case PdfSetTextRenderingMode renderingMode: return renderingMode.Export(stream, objectNumber);
+      case PdfTextRise textRise: return textRise.Export(stream, objectNumber);
     }
     
     stream.Write("BT\n".ToUTF8());
@@ -405,17 +433,17 @@ public static class BasicExporterExtension {
   }
   
   private static PdfExporterResults Export(this PdfShowText showText, Stream stream, int objectNumber) {
-    stream.Write($"({showText.Value}) Tj\n".ToUTF8());
+    stream.Write($"( {showText.Value} ) Tj\n".ToUTF8());
     return new PdfExporterResults();
   }
   
   private static PdfExporterResults Export(this PdfShowTextNextLine showText, Stream stream, int objectNumber) {
-    stream.Write($"({showText.Value}) '\n".ToUTF8());
+    stream.Write($"( {showText.Value} ) '\n".ToUTF8());
     return new PdfExporterResults();
   }
   
   private static PdfExporterResults Export(this PdfShowTextSpacingNextLine showText, Stream stream, int objectNumber) {
-    stream.Write($"{showText.Width} ({showText.Value}) \"\n".ToUTF8());
+    stream.Write($"{showText.Width} ( {showText.Value} ) \"\n".ToUTF8());
     return new PdfExporterResults();
   }
   
@@ -439,6 +467,47 @@ public static class BasicExporterExtension {
     return new PdfExporterResults();
   }
 
+  private static PdfExporterResults Export(this PdfCharacterSpacing characterSpacing, Stream stream, int objectNumber)
+  {
+    stream.Write($"{characterSpacing.CharSpace} Tc\n".ToUTF8());
+    return new PdfExporterResults();
+  }
+
+  private static PdfExporterResults Export(this PdfWordSpacing wordSpacing, Stream stream, int objectNumber)
+  {
+    stream.Write($"{wordSpacing.WordSpace} Tw\n".ToUTF8());
+    return new PdfExporterResults();
+  }
+
+  private static PdfExporterResults Export(this PdfTextHorizontalScale horizontalScale, Stream stream, int objectNumber)
+  {
+    stream.Write($"{horizontalScale.Scale} Tz\n".ToUTF8());
+    return new PdfExporterResults();
+  }
+
+  private static PdfExporterResults Export(this PdfTextLeading leading, Stream stream, int objectNumber)
+  {
+    stream.Write($"{leading.Leading} TL\n".ToUTF8());
+    return new PdfExporterResults();
+  }
+
+  private static PdfExporterResults Export(this PdfSetFont font, Stream stream, int objectNumber)
+  {
+    stream.Write($"/{font.FontName} {font.FontSize} Tf\n".ToUTF8());
+    return new PdfExporterResults();
+  }
+
+  private static PdfExporterResults Export(this PdfSetTextRenderingMode renderingMode, Stream stream, int objectNumber)
+  {
+    stream.Write($"{(int)renderingMode.Mode} Tr\n".ToUTF8());
+    return new PdfExporterResults();
+  }
+
+  private static PdfExporterResults Export(this PdfTextRise textRise, Stream stream, int objectNumber)
+  {
+    stream.Write($"{textRise.Amount} Ts\n".ToUTF8());
+    return new PdfExporterResults();
+  }
 }
 
 internal class PdfExporterResults {
