@@ -236,13 +236,6 @@ public class BmpLoader : IImageLoader
             throw new NotImplementedException($"I have not implemented header '{parsedDibHeader.HeaderType}'");
         }
 
-        Console.Out.WriteLine($"{parsedFileHeader.MagicNumber}");
-        Console.Out.WriteLine($"{parsedFileHeader.FileSize}");
-        Console.Out.WriteLine($"{parsedFileHeader.PixelArrayOffset}");
-        Console.Out.WriteLine($"Width: {parsedDibHeader.BitmapWidth}");
-        Console.Out.WriteLine($"Height: {parsedDibHeader.BitmapHeight}");
-        Console.Out.WriteLine(JsonConvert.SerializeObject(parsedDibHeader, Formatting.Indented, new JsonConverter[] {new StringEnumConverter()}));
-
         // There has to be a better way
         if (parsedDibHeader.CompressionMethod is not CompressionMethod.BI_RGB and not CompressionMethod.BI_CMYK and not CompressionMethod.BI_BITFIELDS)
         {

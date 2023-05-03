@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using BlastSharp.Lists;
 
 namespace BlastPDF.Filter.Implementations;
@@ -20,7 +21,7 @@ public class Lzw : IFilterAlgorithm
     private LzwParameters LzwParameters { get; } = new();
 
     private Dictionary<string, int> codewords { get; set; } = new();
-    private Dictionary<int, byte[]> values { get; set; } = new();
+    private Dictionary<int, IEnumerable<byte>> values { get; set; } = new();
 
     public Lzw(LzwParameters parameters)
     {
@@ -37,19 +38,19 @@ public class Lzw : IFilterAlgorithm
         LzwParameters = parameters;
     }
 
-    private int GetCodeword(byte[] input)
+    private int GetCodeword(IEnumerable<byte> input)
     {
-        return codewords[input.Hash()];
+        return codewords[Encoding.ASCII.GetString(input.ToArray())];
     }
 
-    private bool ContainsCodeword(byte[] input)
+    private bool ContainsCodeword(IEnumerable<byte> input)
     {
-        return codewords.ContainsKey(input.Hash());
+        return codewords.ContainsKey(Encoding.ASCII.GetString(input.ToArray()));
     }
 
-    private void InsertCodeword(byte[] input, int code)
+    private void InsertCodeword(IEnumerable<byte> input, int code)
     {
-        codewords[input.Hash()] = code;
+        codewords[Encoding.ASCII.GetString(input.ToArray())] = code;
     }
 
     private (int, int) ClearCodewords()
@@ -72,7 +73,7 @@ public class Lzw : IFilterAlgorithm
         return (EOD + 1, 9);
     }
     
-    private byte[] GetValue(int input)
+    private IEnumerable<byte> GetValue(int input)
     {
         return values[input];
     }
@@ -82,7 +83,7 @@ public class Lzw : IFilterAlgorithm
         return values.ContainsKey(input);
     }
 
-    private void InsertValue(int input, byte[] value)
+    private void InsertValue(int input, IEnumerable<byte> value)
     {
         values[input] = value;
     }
@@ -99,7 +100,7 @@ public class Lzw : IFilterAlgorithm
 
         foreach (var b in input)
         {
-            var combined = buffer.Append(b).ToArray();
+            var combined = buffer.Append(b);
             if (ContainsCodeword(combined))
             {
                 buffer = combined.ToArray();
@@ -176,17 +177,17 @@ public class Lzw : IFilterAlgorithm
 
             if (ContainsValue(codeword))
             {
-                InsertValue(currentCodeValue, GetValue(priorCodeWord).Append(GetValue(codeword)[0]).ToArray());
+                InsertValue(currentCodeValue, GetValue(priorCodeWord).Append(GetValue(codeword).FirstOrDefault()).ToArray());
                 currentCodeValue += 1;
                 
                 result.AddRange(GetValue(codeword));
             }
             else
             {
-                InsertValue(currentCodeValue, GetValue(priorCodeWord).Append(GetValue(priorCodeWord)[0]).ToArray());
+                InsertValue(currentCodeValue, GetValue(priorCodeWord).Append(GetValue(priorCodeWord).FirstOrDefault()).ToArray());
                 currentCodeValue += 1;
                 
-                result.AddRange(GetValue(priorCodeWord).Append(GetValue(priorCodeWord)[0]));
+                result.AddRange(GetValue(priorCodeWord).Append(GetValue(priorCodeWord).FirstOrDefault()));
             }
             priorCodeWord = codeword; 
             currentBitOffset += currentCodeLength;
