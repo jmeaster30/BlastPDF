@@ -225,4 +225,4 @@ project.lock.json
 #####
 
 Samples/
-Generated/*
+*.g.cs
