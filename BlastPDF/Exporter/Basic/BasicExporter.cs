@@ -8,7 +8,6 @@ using BlastPDF.Builder;
 using BlastPDF.Builder.Graphics;
 using BlastPDF.Builder.Graphics.Drawing;
 using BlastSharp.Lists;
-using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 
 namespace BlastPDF.Exporter.Basic;
 

@@ -3,12 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis" Version="4.2.0" />
-    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
-  </ItemGroup>
-
+  
   <ItemGroup>
     <ProjectReference Include="..\BlastIMG\BlastIMG.csproj" />
     <ProjectReference Include="..\BlastSharp\BlastSharp.csproj" />
