@@ -87,5 +87,7 @@ public class PdfBuilderExample
                     .Scale(600.0M, 600.0M)
                     .InlineImage("../../../images/bmp/cat.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.ASCIIHex, PdfFilter.LZW}))
                 ).Save(fs);
+
+        TestTemplate.OHYEAH();
     }
 }
