@@ -1,15 +1,15 @@
 namespace BlastPDF.Template;
 
 public enum TokenType {
-    Keyword,
+    Identifier,
     Comment,
     String,
-    MultilineString,
     EmbeddedExpression,
     LeftParen,
     RightParen,
     LeftCurly,
     RightCurly,
+    Colon,
     Unknown
 }
 

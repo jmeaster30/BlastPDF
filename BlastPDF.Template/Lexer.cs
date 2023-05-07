@@ -50,20 +50,31 @@ public class TokenEnumerator : IEnumerator<Token>
             return true;
         }
 
-        // Is this necessary??
-        if (_sourcePosition >= _source.Length)
-        {
-            return false;
-        }
-        
         // lex the next token
         _position += 1;
         
+        // consume whitespace
+        while (_sourcePosition < _source.Length && _source[_sourcePosition] is ' ' or '\n' or '\t' or '\r')
+        {
+            if (_source[_sourcePosition] is '\n')
+            {
+                _sourcePosition += 1;
+                _currentLineNumber += 1;
+                _currentColumnNumber = 0;
+            }
+            else
+            {
+                _sourcePosition += 1;
+                _currentColumnNumber += 1;
+            }
+        }
+        
+        // store where we are starting to calculate the ranges
         var startLineNumber = _currentLineNumber;
         var startColumnNumber = _currentColumnNumber;
         var startSourceOffset = _sourcePosition;
         var lexeme = "";
-        var type = TokenType.Unknown;
+        TokenType type;
 
         var c = _source[startSourceOffset];
         switch (c)
@@ -92,17 +103,140 @@ public class TokenEnumerator : IEnumerator<Token>
                 lexeme = ")";
                 type = TokenType.RightParen;
                 break;
+            case ':':
+                _currentColumnNumber += 1;
+                _sourcePosition += 1;
+                lexeme = ":";
+                type = TokenType.Colon;
+                break;
             case '/':
-                // comments
+                _currentColumnNumber += 1;
+                _sourcePosition += 1;
+                lexeme = "/";
+                if (_sourcePosition >= _source.Length || _source[_sourcePosition] != '/')
+                {
+                    type = TokenType.Unknown;
+                    break;
+                }
+                
+                // consume second slash because we confirmed it was there with the previous if statement
+                _sourcePosition += 1;
+                _currentColumnNumber += 1;
+                lexeme += "/";
+                while (_sourcePosition < _source.Length && _source[_sourcePosition] is not '\n')
+                {
+                    lexeme += _source[_sourcePosition];
+                    _sourcePosition += 1;
+                    _currentColumnNumber += 1;
+                }
+
+                type = TokenType.Comment;
                 break;
             case '@':
                 // Embedded Expression
+                _currentColumnNumber += 1;
+                _sourcePosition += 1;
+                lexeme = "@";
+                if (_sourcePosition >= _source.Length || _source[_sourcePosition] is not '{')
+                {
+                    type = TokenType.Unknown;
+                    break;
+                }
+                
+                _sourcePosition += 1;
+                _currentColumnNumber += 1;
+                lexeme += "{";
+                while (_sourcePosition < _source.Length && _source[_sourcePosition] is not '}')
+                {
+                    lexeme += _source[_sourcePosition];
+                    if (_source[_sourcePosition] is '\n')
+                    {
+                        _sourcePosition += 1;
+                        _currentLineNumber += 1;
+                        _currentColumnNumber = 0;
+                    }
+                    else
+                    {
+                        _sourcePosition += 1;
+                        _currentColumnNumber += 1;
+                    }
+                }
+
+                if (_source[_sourcePosition] == '}')
+                {
+                    _sourcePosition += 1;
+                    _currentColumnNumber += 1;
+                    lexeme += '}';
+                    type = TokenType.EmbeddedExpression;
+                }
+                else
+                {
+                    // TODO error unended expression
+                    throw new Exception("LEXER ERROR");
+                }
                 break;
             case '"':
-                // string or multiline string
-            case (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or '_':
+                lexeme += _source[_sourcePosition];
+                _sourcePosition += 1;
+                _currentColumnNumber += 1;
+                while (_sourcePosition < _source.Length && _source[_sourcePosition] is not '"')
+                {
+                    lexeme += _source[_sourcePosition];
+                    if (_source[_sourcePosition] is '\n')
+                    {
+                        _sourcePosition += 1;
+                        _currentLineNumber += 1;
+                        _currentColumnNumber = 0;
+                    }
+                    else
+                    {
+                        _sourcePosition += 1;
+                        _currentColumnNumber += 1;
+                    }
+                }
+                
+                if (_source[_sourcePosition] == '"')
+                {
+                    _sourcePosition += 1;
+                    _currentColumnNumber += 1;
+                    lexeme += '"';
+                    type = TokenType.String;
+                }
+                else
+                {
+                    // TODO error unending string
+                    throw new Exception("LEXER ERROR");
+                }
+                break;
+            case >= 'a' and <= 'z' or >= 'A' and <= 'Z' or '_':
+                lexeme += _source[_sourcePosition];
+                _sourcePosition += 1;
+                _currentColumnNumber += 1;
+                while (_sourcePosition < _source.Length && _source[_sourcePosition] is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or '_')
+                {
+                    lexeme += _source[_sourcePosition];
+                    _sourcePosition += 1;
+                    _currentColumnNumber += 1;
+                }
+                type = TokenType.Identifier;
                 break;
             case >= '0' and <= '9' or '-':
+                lexeme += _source[_sourcePosition];
+                _sourcePosition += 1;
+                _currentColumnNumber += 1;
+                var foundDecimal = false;
+                while (_sourcePosition < _source.Length && _source[_sourcePosition] is >= '0' and <= '9' or '.')
+                {
+                    if (_source[_sourcePosition] == '.')
+                    {
+                        if (foundDecimal) break;
+                        foundDecimal = true;
+                    }
+                    lexeme += _source[_sourcePosition];
+                    _sourcePosition += 1;
+                    _currentColumnNumber += 1;
+                }
+                type = TokenType.Identifier;
                 break;
             default:
                 _currentColumnNumber += 1;
@@ -120,6 +254,22 @@ public class TokenEnumerator : IEnumerator<Token>
             Line = (startLineNumber, _currentLineNumber),
             Offset = (startSourceOffset, _sourcePosition)
         });
+        
+        // consume whitespace
+        while (_sourcePosition < _source.Length && _source[_sourcePosition] is ' ' or '\n' or '\t' or '\r')
+        {
+            if (_source[_sourcePosition] is '\n')
+            {
+                _sourcePosition += 1;
+                _currentLineNumber += 1;
+                _currentColumnNumber = 0;
+            }
+            else
+            {
+                _sourcePosition += 1;
+                _currentColumnNumber += 1;
+            }
+        }
 
         return _sourcePosition < _source.Length;
     }
