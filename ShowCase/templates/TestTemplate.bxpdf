@@ -1,17 +1,42 @@
+// This would be a comment because comments are useful for clean code
 
+Imports {
+    @{System.Collections.Generic}
+}
 
-Paragraph {
-    This is a test document for my pdf templating language. My goal is that it is as simple as possible.
+Variable {
+    @{int a}
+    @{bool b}
+    @{List<MyCoolListSchema> superAwesomeList}
+}
+
+Page {
+    // Multiline string similar to c# multi line strings
+    """
+    This is a test document for my pdf templating language. My goal is that it is as simple as possible. 
     Also, I really want to make it so these templates are loaded into the code through source generators.
-    This will allow us to have type checked variables such as this integer {a int} or this boolean {b boolean}.
+    This will allow us to have type checked variables such as this integer @{a} or this boolean @{b}.
     Just testing out the source generator and want to change the content of the file.
-
-    It would be pretty cool to draw lists like this:
+    """
+    
+    "Images can be drawn like:"
+    
+    Image { "../images/bmp/cat.bmp" }
+    
+    "It would be pretty cool to draw lists like this:"
+    List (
+        Value: @{superAwesomeList}
+        Marker: Dash
+    ) {
+        "@{item.coolword} has @{item.coolword.length()}"
+        
+        // Also with sublists
+        
+        List (
+            Value: @{item.subitems}
+            Marker: Number
+        ) {
+            "@{item.substuff} oh wow!"
+        }
+    }
 }
-
-List(MyListSchema){
-    {row.coolword} has {row.coolword.length()} 
-}
-
-
-
