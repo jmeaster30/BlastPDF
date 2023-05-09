@@ -3,6 +3,7 @@ namespace BlastPDF.Template;
 public enum TokenType {
     Identifier,
     Comment,
+    Number,
     String,
     EmbeddedExpression,
     LeftParen,
@@ -10,7 +11,9 @@ public enum TokenType {
     LeftCurly,
     RightCurly,
     Colon,
-    Unknown
+    Comma,
+    Unknown,
+    Eof
 }
 
 public class Token

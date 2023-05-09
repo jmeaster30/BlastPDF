@@ -39,7 +39,7 @@ public class TokenEnumerator : IEnumerator<Token>
         _position = -1;
         _sourcePosition = 0;
         _currentLineNumber = 1;
-        _currentColumnNumber = 0;
+        _currentColumnNumber = 1;
     }
     
     public bool MoveNext()
@@ -48,6 +48,11 @@ public class TokenEnumerator : IEnumerator<Token>
         {
             _position += 1;
             return true;
+        }
+
+        if (_sourcePosition >= _source.Length)
+        {
+            return false;
         }
 
         // lex the next token
@@ -60,7 +65,7 @@ public class TokenEnumerator : IEnumerator<Token>
             {
                 _sourcePosition += 1;
                 _currentLineNumber += 1;
-                _currentColumnNumber = 0;
+                _currentColumnNumber = 1;
             }
             else
             {
@@ -175,11 +180,12 @@ public class TokenEnumerator : IEnumerator<Token>
                     throw new Exception("LEXER ERROR");
                 }
                 break;
-            case '"':
+            case '"' or '\'':
+                var marker = _source[_sourcePosition];
                 lexeme += _source[_sourcePosition];
                 _sourcePosition += 1;
                 _currentColumnNumber += 1;
-                while (_sourcePosition < _source.Length && _source[_sourcePosition] is not '"')
+                while (_sourcePosition < _source.Length && _source[_sourcePosition] != marker)
                 {
                     lexeme += _source[_sourcePosition];
                     if (_source[_sourcePosition] is '\n')
@@ -195,11 +201,11 @@ public class TokenEnumerator : IEnumerator<Token>
                     }
                 }
                 
-                if (_source[_sourcePosition] == '"')
+                if (_source[_sourcePosition] == marker)
                 {
                     _sourcePosition += 1;
                     _currentColumnNumber += 1;
-                    lexeme += '"';
+                    lexeme += marker;
                     type = TokenType.String;
                 }
                 else
@@ -236,7 +242,7 @@ public class TokenEnumerator : IEnumerator<Token>
                     _sourcePosition += 1;
                     _currentColumnNumber += 1;
                 }
-                type = TokenType.Identifier;
+                type = TokenType.Number;
                 break;
             default:
                 _currentColumnNumber += 1;
@@ -262,7 +268,7 @@ public class TokenEnumerator : IEnumerator<Token>
             {
                 _sourcePosition += 1;
                 _currentLineNumber += 1;
-                _currentColumnNumber = 0;
+                _currentColumnNumber = 1;
             }
             else
             {
@@ -271,7 +277,19 @@ public class TokenEnumerator : IEnumerator<Token>
             }
         }
 
-        return _sourcePosition < _source.Length;
+        if (_sourcePosition >= _source.Length)
+        {
+            _tokens.Add(new Token
+            {
+                Lexeme = "",
+                Type = TokenType.Eof,
+                Line = (_currentLineNumber, _currentLineNumber),
+                Column = (_currentColumnNumber, _currentColumnNumber),
+                Offset = (_sourcePosition, _sourcePosition),
+            });
+        }
+        
+        return true;
     }
 
     public void Reset()

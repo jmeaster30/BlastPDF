@@ -1,43 +1,36 @@
 // This would be a comment because comments are useful for clean code
-// Change something here lkj;lkj
 
 Imports {
     @{System.Collections.Generic}
 }
 
 Variables {
-    @{int a}
-    @{bool b}
-    @{List<MyCoolListSchema> superAwesomeList}
+    @{Person Author}
 }
 
-Page {
-    // all strings can be multiline
-    "
-    This is a test document for my pdf templating language. My goal is that it is as simple as possible. 
-    Also, I really want to make it so these templates are loaded into the code through source generators.
-    This will allow us to have type checked variables such as this integer @{a} or this boolean @{b}.
-    Just testing out the source generator and want to change the content of the file.
-    "
+Document (
+    // Use single quotes to ignore the double quotes in the expression
+    Title: 'Big Serious Report @{DateTime.UtcNow.ToString("MMMM yyyy")}'
+    CreationDate: @{DateTime.UtcNow}
+    Author: "@{Author.FirstName} @{Author.LastName}"
+) {
+    // Add in pages and resources
     
-    "Images can be drawn like:"
+    Font { Helvetica }
     
-    Image { "../images/bmp/cat.bmp" }
-    
-    "It would be pretty cool to draw lists like this:"
-    List (
-        Value: @{superAwesomeList}
-        Marker: Dash
-    ) {
-        "@{item.coolword} has @{item.coolword.length()}"
-        
-        // Also with sublists
-        
-        List (
-            Value: @{item.subitems}
-            Marker: Number
+    Page ( DotsPerInch: 100, Width: 10, Height: 10 ) {
+        TextBox (
+            Leading: 12, LineHeight: 6, X: 100, Y: 100,
+            Font: (Name: Helvetica, Size:24)
         ) {
-            "@{item.substuff} oh wow!"
+            "have we gone too far"
+        }
+        
+        InlineImage (
+            X: 200, Y: 200, Width: 600.0, Height: 600.0
+            Format: BMP
+        ) {
+            "../images/bmp/cat.bmp"
         }
     }
 }
