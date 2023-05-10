@@ -5,6 +5,8 @@ using BlastPDF.Builder;
 using BlastPDF.Builder.Graphics;
 using BlastPDF.Builder.Graphics.Drawing;
 using BlastPDF.Exporter.Basic;
+using BlastSharp.Dates;
+using Microsoft.VisualBasic;
 
 namespace ShowCase;
 
@@ -18,6 +20,13 @@ public class PdfBuilderExample
         
         using var fs = File.Create(outputPdfName);
         PdfDocument.Create()
+            .AddMetadata(new ()
+            {
+                {"Creator", new PdfStringValue("John Easterday")},
+                {"Producer", new PdfStringValue("BlastPDF")},
+                {"Title", new PdfStringValue("Super Incredible PDF >:)")},
+                {"CreationDate", new PdfDateValue(BlastDateTime.Year(1998).June().Day(30))}
+            })
             .AddPage(PdfPage.Create()
                 .DotsPerInch(100)
                 .Width(10)
@@ -88,6 +97,6 @@ public class PdfBuilderExample
                     .InlineImage("../../../images/bmp/cat.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.ASCIIHex, PdfFilter.LZW}))
                 ).Save(fs);
 
-        TestTemplate.OHYEAH();
+        //TestTemplate.OHYEAH();
     }
 }

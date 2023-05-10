@@ -6,6 +6,8 @@ namespace BlastPDF.Builder;
 public class PdfDocument {
   public List<PdfPage> Pages { get; } = new();
   public Dictionary<string, PdfObject> Resources { get; } = new();
+  // create object at end of document and add it to the trailer as /Info
+  public Dictionary<string, IPdfValue> Metadata { get; } = new();
 
   public static PdfDocument Create() {
     return new PdfDocument();
@@ -20,6 +22,22 @@ public class PdfDocument {
 
   public PdfDocument AddPage(PdfPage page) {
     Pages.Add(page);
+    return this;
+  }
+
+  public PdfDocument AddMetadata(string name, IPdfValue value)
+  {
+    Metadata.Add(name, value);
+    return this;
+  }
+
+  public PdfDocument AddMetadata(Dictionary<string, IPdfValue> metadata)
+  {
+    foreach (var value in metadata)
+    {
+      Metadata.Add(value.Key, value.Value);
+    }
+
     return this;
   }
 }

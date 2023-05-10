@@ -5,6 +5,7 @@ namespace BlastPDF.Template;
 public interface IValue
 {
     public string ToString();
+    public string GenerateSource();
 }
 
 public class Error : IValue
@@ -16,6 +17,11 @@ public class Error : IValue
     public new string ToString()
     {
         return $"(ERROR {Severity} '{Message.Replace("\"", "\"\"")}' '{ErrorToken.Lexeme.Replace("\"", "\"\"")}')";
+    }
+
+    public string GenerateSource()
+    {
+        return "";
     }
 }
 
@@ -29,6 +35,19 @@ public class Object : IValue
     {
         return $"(Object '{Name.Lexeme.Replace("\"", "\"\"")}' {ArgumentList?.ToString() ?? "(No Args)"} {Body.ToString()})";
     }
+    
+    public string GenerateSource()
+    {
+        var result = "";
+        if (Name.Lexeme == "Document")
+        {
+            result = "PdfDocument.Create()";
+            // turn argument list into metadata dictonary
+            result += Body.GenerateSource();
+            return result;
+        }
+        return result;
+    }
 }
 
 public class Literal : IValue
@@ -39,6 +58,11 @@ public class Literal : IValue
     {
         return $"(Value {Value.Type} '{Value.Lexeme.Replace("\"", "\"\"")}')";
     }
+    
+    public string GenerateSource()
+    {
+        return "";
+    }
 }
  
 public interface IArgumentValue
@@ -46,6 +70,7 @@ public interface IArgumentValue
     public Token? Name { get; set; }
     public Token? Colon { get; set; }
     public string ToString();
+    public string GenerateSource();
 }
 
 public class ObjectBody
@@ -57,6 +82,11 @@ public class ObjectBody
     public new string ToString()
     {
         return Values.Aggregate("(Body ", (current, value) => current + value.ToString() + " ") + ")";
+    }
+    
+    public string GenerateSource()
+    {
+        return "";
     }
 }
 
@@ -78,6 +108,11 @@ public class ArgumentVector : IArgumentValue
         return ArgumentValues.Aggregate($"({Name.Lexeme.Replace("\"", "\"\"")} : ",
             (current, value) => current + value.ToString() + " ") + ")";
     }
+    
+    public string GenerateSource()
+    {
+        return "";
+    }
 }
 
 public class ArgumentScalar : IArgumentValue
@@ -89,6 +124,11 @@ public class ArgumentScalar : IArgumentValue
     public new string ToString()
     {
         return $"({Name.Lexeme.Replace("\"", "\"\"")} : {Value.Lexeme.Replace("\"", "\"\"")})";
+    }
+    
+    public string GenerateSource()
+    {
+        return "";
     }
 }
 
