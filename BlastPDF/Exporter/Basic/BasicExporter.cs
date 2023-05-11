@@ -20,7 +20,7 @@ public static class BasicExporterExtension {
     var crossReferences = new List<(int, long)>();
     var pageRefNumbers = new List<int>();
 
-    var nextStart = 3;
+    var nextStart = 4;
 
     foreach(var page in document.Pages) {
       var refs = page.Export(stream, nextStart);
@@ -33,8 +33,8 @@ public static class BasicExporterExtension {
 
     // document level resources
 
-    crossReferences.Add((2, stream.Position));
-    stream.Write($"2 0 obj\n".ToUTF8());
+    crossReferences.Add((3, stream.Position));
+    stream.Write($"3 0 obj\n".ToUTF8());
     stream.Write("<<\n".ToUTF8());
     stream.Write("/Type /Pages\n".ToUTF8());
     stream.Write("/Kids [\n".ToUTF8());
@@ -45,12 +45,22 @@ public static class BasicExporterExtension {
     stream.Write($"/Count {pageRefNumbers.Count}\n".ToUTF8());
     stream.Write(">>\n".ToUTF8());
     stream.Write("endobj\n".ToUTF8());
+    
+    crossReferences.Add((2, stream.Position));
+    stream.Write($"2 0 obj\n".ToUTF8());
+    stream.Write("<<\n".ToUTF8());
+    foreach (var item in document.Metadata)
+    {
+      stream.Write($"/{item.Key} {item.Value.ToString()}\n".ToUTF8());
+    }
+    stream.Write(">>\n".ToUTF8());
+    stream.Write("endobj\n".ToUTF8());
 
     crossReferences.Add((1, stream.Position));
     stream.Write($"1 0 obj\n".ToUTF8());
     stream.Write("<<\n".ToUTF8());
     stream.Write("/Type /Catalog\n".ToUTF8());
-    stream.Write($"/Pages 2 0 R\n".ToUTF8());
+    stream.Write($"/Pages 3 0 R\n".ToUTF8());
     stream.Write(">>\n".ToUTF8());
     stream.Write("endobj\n".ToUTF8());
 
@@ -69,6 +79,7 @@ public static class BasicExporterExtension {
     stream.Write("<<\n".ToUTF8());
     stream.Write($"/Size {crossReferences.Count + 1}\n".ToUTF8());
     stream.Write($"/Root 1 0 R\n".ToUTF8());
+    stream.Write("/Info 2 0 R\n".ToUTF8());
     stream.Write(">>\n".ToUTF8());
     stream.Write("startxref\n".ToUTF8());
     stream.Write($"{xrefByteOffset}\n".ToUTF8());

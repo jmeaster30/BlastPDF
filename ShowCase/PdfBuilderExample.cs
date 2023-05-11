@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using BlastIMG;
 using BlastPDF.Builder;
@@ -20,12 +21,12 @@ public class PdfBuilderExample
         
         using var fs = File.Create(outputPdfName);
         PdfDocument.Create()
-            .AddMetadata(new ()
+            .AddMetadata(new Dictionary<string, IPdfValue>
             {
                 {"Creator", new PdfStringValue("John Easterday")},
                 {"Producer", new PdfStringValue("BlastPDF")},
                 {"Title", new PdfStringValue("Super Incredible PDF >:)")},
-                {"CreationDate", new PdfDateValue(BlastDateTime.Year(1998).June().Day(30))}
+                {"CreationDate", new PdfDateValue(DateTime.Now.Year(1998).June().Day(30))}
             })
             .AddPage(PdfPage.Create()
                 .DotsPerInch(100)
@@ -98,5 +99,9 @@ public class PdfBuilderExample
                 ).Save(fs);
 
         //TestTemplate.OHYEAH();
+
+        var date = DateTime.Now.Year(1998).June().Day(30);
+        Console.WriteLine(date.ToLocalTime().ToLongTimeString());
+        Console.WriteLine(new PdfDateValue(date.ToLocalTime()).ToString());
     }
 }

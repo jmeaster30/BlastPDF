@@ -2,10 +2,17 @@ namespace BlastSharp.Dates;
 
 public static class BlastDateTime
 {
-    public static DateTime Day(int day) => new DateTime(0, 0, day);
-    public static DateTime Month(int month) => new DateTime(0, month, 0);
-    public static DateTime Year(int year) => new DateTime(year, 0, 0);
+    public static DateTime Day(int day) => new DateTime(1, 1, day);
+    public static DateTime Month(int month) => new DateTime(1, month, 1);
+    public static DateTime Year(int year) => new DateTime(year, 1, 1);
     
+    public static DateTime TimeZone(this DateTime datetime, TimeZoneInfo timezoneinfo) => TimeZoneInfo.ConvertTime(datetime, timezoneinfo);
+    public static DateTime Second(this DateTime datetime, int day) => new DateTime(datetime.Year, datetime.Month, day,
+        datetime.Hour, datetime.Minute, datetime.Second, datetime.Millisecond, datetime.Kind);
+    public static DateTime Minute(this DateTime datetime, int day) => new DateTime(datetime.Year, datetime.Month, day,
+        datetime.Hour, datetime.Minute, datetime.Second, datetime.Millisecond, datetime.Kind);
+    public static DateTime Hour(this DateTime datetime, int day) => new DateTime(datetime.Year, datetime.Month, day,
+        datetime.Hour, datetime.Minute, datetime.Second, datetime.Millisecond, datetime.Kind);
     public static DateTime Day(this DateTime datetime, int day) => new DateTime(datetime.Year, datetime.Month, day,
         datetime.Hour, datetime.Minute, datetime.Second, datetime.Millisecond, datetime.Kind);
     public static DateTime Month(this DateTime datetime, int month) => new DateTime(datetime.Year, month, datetime.Day,
@@ -13,18 +20,18 @@ public static class BlastDateTime
     public static DateTime Year(this DateTime datetime, int year) => new DateTime(year, datetime.Month, datetime.Day,
         datetime.Hour, datetime.Minute, datetime.Second, datetime.Millisecond, datetime.Kind);
     
-    public static DateTime January() => new DateTime(0, 1, 0);
-    public static DateTime February() => new DateTime(0, 2, 0);
-    public static DateTime March() => new DateTime(0, 3, 0);
-    public static DateTime April() => new DateTime(0, 4, 0);
-    public static DateTime May() => new DateTime(0, 5, 0);
-    public static DateTime June() => new DateTime(0, 6, 0);
-    public static DateTime July() => new DateTime(0, 7, 0);
-    public static DateTime August() => new DateTime(0, 8, 0);
-    public static DateTime September() => new DateTime(0, 9, 0);
-    public static DateTime October() => new DateTime(0, 10, 0);
-    public static DateTime November() => new DateTime(0, 11, 0);
-    public static DateTime December() => new DateTime(0, 12, 0);
+    public static DateTime January() => new DateTime(1, 1, 1);
+    public static DateTime February() => new DateTime(1, 2, 1);
+    public static DateTime March() => new DateTime(1, 3, 1);
+    public static DateTime April() => new DateTime(1, 4, 1);
+    public static DateTime May() => new DateTime(1, 5, 1);
+    public static DateTime June() => new DateTime(1, 6, 1);
+    public static DateTime July() => new DateTime(1, 7, 1);
+    public static DateTime August() => new DateTime(1, 8, 1);
+    public static DateTime September() => new DateTime(1, 9, 1);
+    public static DateTime October() => new DateTime(0, 10, 1);
+    public static DateTime November() => new DateTime(0, 11, 1);
+    public static DateTime December() => new DateTime(0, 12, 1);
     
     public static DateTime January(this DateTime datetime) => new DateTime(datetime.Year, 1, datetime.Day,
         datetime.Hour, datetime.Minute, datetime.Second, datetime.Millisecond, datetime.Kind);
@@ -54,6 +61,4 @@ public static class BlastDateTime
     public static DateTime AddWeeks(this DateTime dateTime, int n) => dateTime.AddDays(n * 7);
     public static DateTime NthWeekDay(this DateTime datetime, int n, DayOfWeek dayOfWeek) =>
         datetime.AddDays((dayOfWeek - datetime.DayOfWeek + 7) % 7).AddWeeks(n);
-    
-    
 }
