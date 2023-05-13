@@ -16,7 +16,7 @@ public class RunLengthTests
     {
         FilterTestHelpers.TestFilter(PdfFilter.RunLength, "this?");
     }
-    
+
     [Fact]
     public void Test3()
     {

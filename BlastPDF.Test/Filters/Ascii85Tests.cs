@@ -6,6 +6,24 @@ namespace BlastPDF.Test.Filters;
 public class Ascii85Tests
 {
     [Fact]
+    public void TestIDidIt()
+    {
+        FilterTestHelpers.TestFilter(PdfFilter.Ascii85, "i did it :)");
+    }
+    
+    [Fact]
+    public void TestMustTestThis()
+    {
+        FilterTestHelpers.TestFilter(PdfFilter.Ascii85, "I must test this a bunch");
+    }
+    
+    [Fact]
+    public void TestLeviathan()
+    {
+        FilterTestHelpers.TestFilter(PdfFilter.Ascii85, "Man is distinguished, not only by his reason, but by this singular passion from other animals, which is a lust of the mind, that by a perseverance of delight in the continued and indefatigable generation of knowledge, exceeds the short vehemence of any carnal pleasure.");
+    }
+    
+    [Fact]
     public void Test1()
     {
         FilterTestHelpers.TestFilter(PdfFilter.Ascii85, "this is a test of the lzw filter");
