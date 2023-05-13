@@ -68,12 +68,12 @@ public class RunLength : IFilterAlgorithm
         for(var i = 0; i < input.Count(); i++)
         {
             var b = input.ElementAt(i);
-            if (b is >= 0 and < 128)
+            if (b < 128)
             {
                 result.AddRange(input.Skip(i + 1).Take(b + 1));
                 i += b + 1;
             }
-            else if (b is > 128 and <= 255)
+            else if (b > 128)
             {
                 result.AddRange(input.ElementAt(i + 1).Repeat(257 - b));
                 i += 1;

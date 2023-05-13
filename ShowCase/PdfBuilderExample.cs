@@ -12,6 +12,12 @@ using Microsoft.VisualBasic;
 
 namespace ShowCase;
 
+public class Person
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+}
+
 public class PdfBuilderExample
 {
     public static void Run(string outputPdfName)
@@ -99,7 +105,21 @@ public class PdfBuilderExample
                     .InlineImage("../../../images/bmp/cat.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.AsciiHex, PdfFilter.Lzw}))
                 ).Save(fs);
 
-        //TestTemplate.OHYEAH();
+        if (File.Exists("template_test.pdf")) {
+            File.Delete("template_test.pdf");
+        }
+        
+        using var templateFile = File.Create("template_test.pdf");
+        
+        var template = new TestTemplate {
+            Author = new Person
+            {
+                FirstName = "John",
+                LastName = "Easterday"
+            }
+        };
+        
+        template.Save(templateFile);
 
         var date = DateTime.Now.Year(1998).June().Day(30);
         Console.WriteLine(date.ToLocalTime().ToLongTimeString());

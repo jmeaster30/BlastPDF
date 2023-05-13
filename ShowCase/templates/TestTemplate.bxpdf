@@ -1,11 +1,14 @@
 // This would be a comment because comments are useful for clean code
 
+Namespace { @{ShowCase} }
+
 Imports {
     @{System.Collections.Generic}
 }
 
 Variables {
     @{Person Author}
+    @{int test}
 }
 
 Document (

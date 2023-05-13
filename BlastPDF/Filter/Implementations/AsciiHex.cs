@@ -33,13 +33,13 @@ public class AsciiHex : IFilterAlgorithm
 
     public IEnumerable<byte> Decode(IEnumerable<byte> input)
     { 
-        var filtered = input.Where(x => !char.IsWhiteSpace((char)x));
+        var filtered = input.Where(x => !char.IsWhiteSpace((char)x)).ToList();
         if (filtered.LastOrDefault() != (byte) '>')
         {
             throw new ArgumentException("Sequence must end in a '>'.", nameof(input));
         }
 
-        var contents = filtered.Take(filtered.Count() - 1);
+        var contents = filtered.Take(filtered.Count - 1).ToList();
         if (contents.Any(x => x is not ((>= 48 and <= 57) or (>= 65 and <= 70) or (>= 97 and <= 102))))
         {
             throw new ArgumentException("Sequence must contain only characters that match regex: '[0-9A-Za-z]|\\w'");

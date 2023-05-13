@@ -39,3 +39,16 @@ public class PdfDateValue : IPdfValue
         return $"(D:{Value.ToString("yyyyMMddHHmmss")}{(offset.Hours < 0 ? '-' : (offset.Hours == 0 ? 'Z' : '+'))}{Math.Abs(offset.Hours):00}'{Math.Abs(offset.Minutes):00})";
     }
 }
+
+public static class PdfValueExtensions
+{
+    public static IPdfValue ToPdfValue(this string s)
+    {
+        return new PdfStringValue(s);
+    }
+
+    public static IPdfValue ToPdfValue(this DateTime d)
+    {
+        return new PdfDateValue(d);
+    }
+}

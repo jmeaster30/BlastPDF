@@ -125,4 +125,28 @@ public static class EnumerableExtensions {
         }
         return s;
     }
+    
+    public static string Join(this IEnumerable<string> input, char sep)
+    {
+        return input.Join(sep.ToString());
+    }
+    
+    public static string Join(this IEnumerable<char> input, string sep)
+    {
+        var s = "";
+        for (var i = 0; i < input.Count(); i++)
+        {
+            s += input.ElementAt(i);
+            if (i < input.Count() - 1)
+            {
+                s += sep;
+            }
+        }
+        return s;
+    }
+    
+    public static string Join(this IEnumerable<char> input, char sep)
+    {
+        return input.Join(sep.ToString());
+    }
 }
