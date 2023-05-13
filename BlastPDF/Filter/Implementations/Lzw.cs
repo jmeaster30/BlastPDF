@@ -184,7 +184,6 @@ public class Lzw : IFilterAlgorithm
             }
             else
             {
-                Console.WriteLine($"off {currentBitOffset} code value {currentCodeValue} prior {priorCodeWord} codeword {codeword} codelength {currentCodeLength}");
                 var priorCodeValue = GetValue(priorCodeWord);
                 var appended = priorCodeValue.Append(priorCodeValue.First());
                 InsertValue(currentCodeValue, appended.ToArray());

@@ -27,17 +27,6 @@ public class Program {
 
     var (diffOffset, leftDiff, rightDiff) = bytes.FirstDifference(decoded);
     Console.WriteLine(diffOffset == -1 ? "SUCCESS" : $"[{diffOffset}] {leftDiff} != {rightDiff}");
-    
-    var abytes = Encoding.ASCII.GetBytes(@"i did it :) asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf");
-    var aencoded  = PdfFilter.LZW.Encode(bytes);
-    var adecoded = PdfFilter.LZW.Decode(encoded);
-    
-    Console.WriteLine($"bytes   '{Encoding.ASCII.GetString(abytes.ToArray())}'");
-    Console.WriteLine($"encoded '{Encoding.ASCII.GetString(aencoded.ToArray())}'");
-    Console.WriteLine($"decoded '{Encoding.ASCII.GetString(adecoded.ToArray())}'");
-
-    var (adiffOffset, aleftDiff, arightDiff) = bytes.FirstDifference(adecoded);
-    Console.WriteLine(diffOffset == -1 ? "SUCCESS" : $"[{adiffOffset}] {aleftDiff} != {arightDiff}");
   }
 }
 

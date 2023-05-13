@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace BlastSharp.Lists;
 
@@ -103,6 +104,12 @@ public static class EnumerableExtensions {
             .Select(x => x.Aggregate((ulong)0, (result, b) => (result << 8) | b))
             .ToList()
             .Aggregate(h, (hp, v) => (hp ^ Mix(v)) * m);
+    }
+
+    public static string Md5Hash(this IEnumerable<byte> input)
+    {
+        using var md5 = MD5.Create();
+        return Convert.ToHexString(md5.ComputeHash(input.ToArray()));
     }
 
     public static string Join(this IEnumerable<string> input, string sep)
