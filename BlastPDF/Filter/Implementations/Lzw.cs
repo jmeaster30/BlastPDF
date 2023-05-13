@@ -20,7 +20,7 @@ public class Lzw : IFilterAlgorithm
     // FIXME actually utilize this parameters :)
     private LzwParameters LzwParameters { get; } = new();
 
-    private Dictionary<string, int> codewords { get; set; } = new();
+    private Dictionary<ulong, int> codewords { get; set; } = new();
     private Dictionary<int, IEnumerable<byte>> values { get; set; } = new();
 
     public Lzw(LzwParameters parameters)
@@ -40,23 +40,23 @@ public class Lzw : IFilterAlgorithm
 
     private int GetCodeword(IEnumerable<byte> input)
     {
-        return codewords[Encoding.ASCII.GetString(input.ToArray())];
+        return codewords[input.Hash()];
     }
 
     private bool ContainsCodeword(IEnumerable<byte> input)
     {
-        return codewords.ContainsKey(Encoding.ASCII.GetString(input.ToArray()));
+        return codewords.ContainsKey(input.Hash());
     }
 
     private void InsertCodeword(IEnumerable<byte> input, int code)
     {
-        codewords[Encoding.ASCII.GetString(input.ToArray())] = code;
+        codewords[input.Hash()] = code;
     }
 
     private (int, int) ClearCodewords()
     {
-        codewords = new();
-        for (int i = 0; i < 256; i++)
+        codewords = new Dictionary<ulong, int>();
+        for (var i = 0; i < 256; i++)
         {
             InsertCodeword(new[] {(byte) i}, i);
         }
@@ -65,8 +65,8 @@ public class Lzw : IFilterAlgorithm
     
     private (int, int) ClearValues()
     {
-        values = new();
-        for (int i = 0; i < 256; i++)
+        values = new Dictionary<int, IEnumerable<byte>>();
+        for (var i = 0; i < 256; i++)
         {
             InsertValue(i, new[] {(byte) i});
         }
@@ -95,7 +95,7 @@ public class Lzw : IFilterAlgorithm
     {
         var (currentCodeValue, currentCodeLength) = ClearCodewords();
 
-        var buffer = new byte[]{};
+        var buffer = Array.Empty<byte>();
         var result = new BitList();
 
         foreach (var b in input)
@@ -177,17 +177,19 @@ public class Lzw : IFilterAlgorithm
 
             if (ContainsValue(codeword))
             {
-                InsertValue(currentCodeValue, GetValue(priorCodeWord).Append(GetValue(codeword).FirstOrDefault()).ToArray());
+                InsertValue(currentCodeValue, GetValue(priorCodeWord).Append(GetValue(codeword).First()).ToArray());
                 currentCodeValue += 1;
                 
                 result.AddRange(GetValue(codeword));
             }
             else
             {
-                InsertValue(currentCodeValue, GetValue(priorCodeWord).Append(GetValue(priorCodeWord).FirstOrDefault()).ToArray());
+                Console.WriteLine($"off {currentBitOffset} code value {currentCodeValue} prior {priorCodeWord} codeword {codeword} codelength {currentCodeLength}");
+                var priorCodeValue = GetValue(priorCodeWord);
+                var appended = priorCodeValue.Append(priorCodeValue.First());
+                InsertValue(currentCodeValue, appended.ToArray());
                 currentCodeValue += 1;
-                
-                result.AddRange(GetValue(priorCodeWord).Append(GetValue(priorCodeWord).FirstOrDefault()));
+                result.AddRange(appended);
             }
             priorCodeWord = codeword; 
             currentBitOffset += currentCodeLength;

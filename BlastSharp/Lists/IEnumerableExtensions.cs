@@ -1,28 +1,34 @@
+using System.Diagnostics;
+
 namespace BlastSharp.Lists;
 
 public static class EnumerableExtensions {
     public static IEnumerable<T> PadRight<T>(this IEnumerable<T> a, int amount, T value)
     {
-        int toAdd = amount - a.Count();
-        if (toAdd <= 0) return a;
-        for (int i = 0; i < toAdd; i++)
+        var result = new List<T>();
+        for (var i = 0; i < amount; i++)
         {
-            a = a.Append(value);
+            result.Add(i < a.Count() ? a.ElementAt(i) : value);
         }
-        
-        return a;
+        return result;
     }
     
     public static IEnumerable<T> PadLeft<T>(this IEnumerable<T> a, int amount, T value)
     {
-        int toAdd = amount - a.Count();
-        if (toAdd <= 0) return a;
-        for (int i = 0; i < toAdd; i++)
+        var result = new List<T>();
+        for (var i = 0; i < amount; i++)
         {
-            a = a.Prepend(value);
+            if (i < a.Count())
+            {
+                result.Add(a.ElementAt(i));
+            }
+            else
+            {
+                result = result.Prepend(value).ToList();
+            }
+
         }
-        
-        return a;
+        return result;
     }
 
     // TODO I feel like this API could be better :/
@@ -78,10 +84,25 @@ public static class EnumerableExtensions {
         return (index, lResult, rResult);
     }
 
-    public static string Hash(this IEnumerable<byte> input)
+    private static ulong Mix(ulong v)
     {
-        using var md5 = System.Security.Cryptography.MD5.Create();
-        return Convert.ToHexString(md5.ComputeHash(input.ToArray()));
+        var result = v;
+        result ^= result >> 23;
+        result *= 0x2127599bf4325c37;
+        result ^= result >> 47;
+        return result;
+    }
+    
+    public static ulong Hash(this IEnumerable<byte> input)
+    {
+        // modified version of the fast hash algorithm from https://github.com/ztanml/fast-hash but converted to C# and also changed a little bit
+        var m = 0x880355f21e6d1965;
+        ulong seed = 0; // not sure how the seed works??
+        var h = seed ^ ((ulong)input.LongCount() * m);
+        return input.Chunk(8)
+            .Select(x => x.Aggregate((ulong)0, (result, b) => (result << 8) | b))
+            .ToList()
+            .Aggregate(h, (hp, v) => (hp ^ Mix(v)) * m);
     }
 
     public static string Join(this IEnumerable<string> input, string sep)
