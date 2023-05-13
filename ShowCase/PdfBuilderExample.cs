@@ -6,6 +6,7 @@ using BlastPDF.Builder;
 using BlastPDF.Builder.Graphics;
 using BlastPDF.Builder.Graphics.Drawing;
 using BlastPDF.Exporter.Basic;
+using BlastPDF.Filter;
 using BlastSharp.Dates;
 using Microsoft.VisualBasic;
 
@@ -95,7 +96,7 @@ public class PdfBuilderExample
                 .AddGraphics(PdfGraphicsObject.Create()
                     .Translate(200, 200)
                     .Scale(600.0M, 600.0M)
-                    .InlineImage("../../../images/bmp/cat.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.ASCIIHex, PdfFilter.LZW}))
+                    .InlineImage("../../../images/bmp/cat.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.AsciiHex, PdfFilter.Lzw}))
                 ).Save(fs);
 
         //TestTemplate.OHYEAH();

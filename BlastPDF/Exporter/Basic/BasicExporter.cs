@@ -7,6 +7,7 @@ using BlastPDF.Exporter.Util;
 using BlastPDF.Builder;
 using BlastPDF.Builder.Graphics;
 using BlastPDF.Builder.Graphics.Drawing;
+using BlastPDF.Filter;
 using BlastSharp.Lists;
 
 namespace BlastPDF.Exporter.Basic;
@@ -284,9 +285,9 @@ public static class BasicExporterExtension {
     stream.Write($"\t/BPC {image.BitsPerComponent}\n".ToUTF8());
     var filterNames = image.Filters.Select(x => x switch
     {
-      PdfFilter.ASCII85 => "/A85",
-      PdfFilter.ASCIIHex => "/AHx",
-      PdfFilter.LZW => "/LZW",
+      PdfFilter.Ascii85 => "/A85",
+      PdfFilter.AsciiHex => "/AHx",
+      PdfFilter.Lzw => "/LZW",
       PdfFilter.RunLength => "/RL",
       _ => throw new NotImplementedException()
     }).Join(" ");

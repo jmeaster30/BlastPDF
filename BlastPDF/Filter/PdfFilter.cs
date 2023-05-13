@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using BlastPDF.Filter;
 using BlastPDF.Filter.Implementations;
 
-namespace BlastPDF.Builder;
+namespace BlastPDF.Filter;
 
 public enum PdfFilter
 {
-    ASCIIHex,
-    ASCII85,
-    LZW,
+    AsciiHex,
+    Ascii85,
+    Lzw,
     Flate,
     RunLength,
     CCITTFax,
@@ -25,9 +25,9 @@ public static class PdfFilterExtensions
     {
         return decodeType switch
         {
-            PdfFilter.ASCIIHex => new AsciiHex(),
-            PdfFilter.ASCII85 => new Ascii85(),
-            PdfFilter.LZW => new Lzw(parameters as LzwParameters),
+            PdfFilter.AsciiHex => new AsciiHex(),
+            PdfFilter.Ascii85 => new Ascii85(),
+            PdfFilter.Lzw => new Lzw(parameters as LzwParameters),
             PdfFilter.Flate => throw new NotImplementedException(),
             PdfFilter.RunLength => new RunLength(),
             PdfFilter.CCITTFax => throw new NotImplementedException(),

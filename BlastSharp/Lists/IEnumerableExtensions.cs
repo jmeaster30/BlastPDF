@@ -97,8 +97,8 @@ public static class EnumerableExtensions {
     public static ulong Hash(this IEnumerable<byte> input)
     {
         // modified version of the fast hash algorithm from https://github.com/ztanml/fast-hash but converted to C# and also changed a little bit
-        var m = 0x880355f21e6d1965;
-        ulong seed = 0; // not sure how the seed works??
+        const ulong m = 0x880355f21e6d1965;
+        const ulong seed = 0; // not sure how the seed works??
         var h = seed ^ ((ulong)input.LongCount() * m);
         return input.Chunk(8)
             .Select(x => x.Aggregate((ulong)0, (result, b) => (result << 8) | b))

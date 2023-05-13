@@ -1,6 +1,7 @@
 using System;
 using BlastIMG;
 using BlastIMG.ImageLoaders;
+using BlastPDF.Filter;
 
 namespace BlastPDF.Builder.Graphics.Drawing;
 
@@ -31,7 +32,7 @@ public class PdfInlineImage : PdfGraphicsObject
 
     if (filters is null)
     {
-      result.Filters = new[] {PdfFilter.ASCIIHex};
+      result.Filters = new[] {PdfFilter.AsciiHex};
     }
 
     return result;
