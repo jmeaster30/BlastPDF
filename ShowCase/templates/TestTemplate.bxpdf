@@ -22,7 +22,7 @@ Document (
     Font { Helvetica }
     
     Page ( DotsPerInch: 100, Width: 10, Height: 10 ) {
-        TextBox (
+        Text (
             Leading: 12, LineHeight: 6, X: 100, Y: 100,
             Font: (Name: Helvetica, Size:24)
         ) {

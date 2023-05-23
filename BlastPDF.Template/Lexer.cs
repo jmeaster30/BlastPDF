@@ -224,7 +224,67 @@ public class TokenEnumerator : IEnumerator<Token>
                     _sourcePosition += 1;
                     _currentColumnNumber += 1;
                 }
-                type = TokenType.Identifier;
+
+                type = lexeme.ToLower() switch
+                {
+                    "namespace" => TokenType.Namespace,
+                    "import" => TokenType.Import,
+                    "variable" => TokenType.Variable,
+                    "title" => TokenType.Title,
+                    "creationdate" => TokenType.CreationDate,
+                    "author" => TokenType.Author,
+                    "load" => TokenType.Load,
+                    "font" => TokenType.Font,
+                    "image" => TokenType.Image,
+                    "size" => TokenType.Size,
+                    "name" => TokenType.Name,
+                    "dot" => TokenType.Dot,
+                    "inch" => TokenType.Inch,
+                    "percent" => TokenType.Percent,
+                    "page" => TokenType.Page,
+                    "single" => TokenType.Single,
+                    "layout" => TokenType.Layout,
+                    "header" => TokenType.Header,
+                    "body" => TokenType.Body,
+                    "footer" => TokenType.Footer,
+                    "width" => TokenType.Width,
+                    "height" => TokenType.Height,
+                    "margin" => TokenType.Margin,
+                    "left" => TokenType.Left,
+                    "right" => TokenType.Right,
+                    "up" => TokenType.Up,
+                    "down" => TokenType.Down,
+                    "all" => TokenType.All,
+                    "text" => TokenType.Text,
+                    "rise" => TokenType.Rise,
+                    "space" => TokenType.Space,
+                    "word" => TokenType.Word,
+                    "char" => TokenType.Char,
+                    "leading" => TokenType.Leading,
+                    "transform" => TokenType.Transform,
+                    "offset" => TokenType.Offset,
+                    "translate" => TokenType.Translate,
+                    "scale" => TokenType.Scale,
+                    "rotate" => TokenType.Rotate,
+                    "skew" => TokenType.Skew,
+                    "rendermode" => TokenType.RenderMode,
+                    "fill" => TokenType.Fill,
+                    "stroke" => TokenType.Stroke,
+                    "fillstroke" => TokenType.FillStroke,
+                    "invisible" => TokenType.Invisible,
+                    "fillclip" => TokenType.FillClip,
+                    "strokeclip" => TokenType.StrokeClip,
+                    "fillstrokeclip" => TokenType.FillStrokeClip,
+                    "clip" => TokenType.Clip,
+                    "if" => TokenType.If,
+                    "then" => TokenType.Then,
+                    "else" => TokenType.Else,
+                    "loop" => TokenType.Loop,
+                    "in" => TokenType.In,
+                    "end" => TokenType.End,
+                    _ => TokenType.Identifier
+                };
+
                 break;
             case >= '0' and <= '9' or '-':
                 lexeme += _source[_sourcePosition];
