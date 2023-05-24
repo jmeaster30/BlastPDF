@@ -10,7 +10,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <AdditionalFiles Include="templates/TestTemplate.bxpdf" />
+    <AdditionalFiles Include="templates/TestLayout.bxpdf" />
   </ItemGroup>
 
   <PropertyGroup>

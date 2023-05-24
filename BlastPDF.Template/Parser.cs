@@ -1,174 +1,193 @@
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace BlastPDF.Template;
 
 public class Parser
 {
-    public static List<IValue> Parse(string content)
+    public static List<IDocumentNode> Parse(string content)
     {
         var lexer = new Lexer(content);
         var meaningfulTokens = lexer
             .Where(x => x.Type is not TokenType.Unknown and not TokenType.Comment and not TokenType.Eof)
             .ToList();
 
-        var results = new List<IValue>();
+        return ParseDocumentStatements(meaningfulTokens);
+    }
+
+    private static List<IDocumentNode> ParseDocumentStatements(IReadOnlyList<Token> tokens)
+    {
         var tokenIndex = 0;
-        while (tokenIndex < meaningfulTokens.Count)
+        var results = new List<IDocumentNode>();
+        while (tokenIndex < tokens.Count)
         {
-            var (value, nextIndex) = ParseValue(meaningfulTokens, tokenIndex);
-            tokenIndex = nextIndex;
-            results.Add(value);
+            var currentToken = tokens[tokenIndex];
+            switch (currentToken.Type)
+            {
+                case TokenType.Namespace:
+                {
+                    var (node, idx) = ParseNamespaceNode(tokens, tokenIndex);
+                    results.Add(node);
+                    tokenIndex = idx;
+                    break;
+                }
+                case TokenType.Import:
+                {
+                    var (node, idx) = ParseImportNode(tokens, tokenIndex);
+                    results.Add(node);
+                    tokenIndex = idx;
+                    break;
+                }
+                case TokenType.Variable:
+                {
+                    var (node, idx) = ParseVariableNode(tokens, tokenIndex);
+                    results.Add(node);
+                    tokenIndex = idx;
+                    break;
+                }
+                default:
+                {
+                    var (errorTokens, idx) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+                    results.Add(new DocumentError
+                    {
+                        ErroredTokens = errorTokens,
+                        Message = $"Unexpected token ({currentToken.Type}, '{currentToken.Lexeme}') expected a document level statement.",
+                        Severity = DiagnosticSeverity.Error
+                    });
+                    if (tokenIndex == idx)
+                    {
+                        tokenIndex = idx + 1;
+                    }
+                    else
+                    {
+                        tokenIndex = idx;
+                    }
+                    break;
+                }
+            }
         }
 
         return results;
     }
 
-    private static (IValue, int) ParseValue(IReadOnlyList<Token> tokens, int tokenIndex)
+    private static bool IsDocumentNodeToken(TokenType type)
     {
-        return tokens[tokenIndex].Type switch
-        {
-            TokenType.Identifier => ParseObjectOrIdentifierValue(tokens, tokenIndex),
-            TokenType.String or TokenType.Number or TokenType.EmbeddedExpression => (new Literal { Value = tokens[tokenIndex] }, tokenIndex + 1),
-            _ => (
-                new Error
-                {
-                    ErrorToken = tokens[tokenIndex],
-                    Message = "Unexpected token :(  Expected: Identifier, String, or Embedded Expression.",
-                    Severity = DiagnosticSeverity.Error
-                }, tokenIndex + 1)
-        };
+        return type is not (TokenType.Namespace or TokenType.Import);
     }
 
-    private static (IValue, int) ParseObjectOrIdentifierValue(IReadOnlyList<Token> tokens, int tokenIndex)
+    private static (List<Token>, int) ConsumeUntilNextDocumentNode(IReadOnlyList<Token> tokens, int tokenIndex)
     {
-        if (tokenIndex == tokens.Count - 1) return (new Literal { Value = tokens[tokenIndex] }, tokenIndex + 1);
-
-        return tokens[tokenIndex + 1].Type switch
+        var results = new List<Token>(); 
+        while (tokenIndex < tokens.Count && IsDocumentNodeToken(tokens[tokenIndex].Type))
         {
-            TokenType.LeftParen or TokenType.LeftCurly => ParseObject(tokens, tokenIndex),
-            _ => (new Literal { Value = tokens[tokenIndex] }, tokenIndex + 1)
-        };
+            results.Add(tokens[tokenIndex]);
+            tokenIndex += 1;
+        }
+        return (results, tokenIndex);
     }
 
-    private static (IValue, int) ParseObject(IReadOnlyList<Token> tokens, int tokenIndex)
+    private static (IDocumentNode, int) ParseNamespaceNode(IReadOnlyList<Token> tokens, int tokenIndex)
     {
-        var identifier = tokens[tokenIndex];
-        Debug.WriteLine($"BEFORE ARGUMENT LIST {identifier.Lexeme}");
-        var (argumentList, nextIndex) = ParseArgumentList(tokens, tokenIndex + 1, true);
-        Debug.WriteLine($"AFTER ARGUMENT LIST {identifier.Lexeme}");
-        var (objectBody, finalIndex) = ParseObjectBody(tokens, nextIndex);
-        return (new Object
-        {
-            Name = identifier,
-            ArgumentList = argumentList,
-            Body = objectBody
-        }, finalIndex);
-    }
-    
-    private static (Token, int) ParseTokenByType(IReadOnlyList<Token> tokens, int tokenIndex, TokenType type)
-    {
-        // TODO remove these exceptions and return diagnostic errors
+        // assume we check the namespace node already
+        var namespaceToken = tokens[tokenIndex];
+        tokenIndex += 1;
         if (tokenIndex >= tokens.Count)
         {
-            throw new Exception($"Unexpected end of tokens {type}");
-        }
-        
-        // TODO remove these exceptions and return diagnostic errors
-        if (tokens[tokenIndex].Type != type)
-        {
-            throw new Exception($"Unexpected token :( Expected {type} got '{tokens[tokenIndex].Lexeme}' Line: {tokens[tokenIndex].Line.Item1} Column: {tokens[tokenIndex].Column.Item1}");
-        }
-
-        return (tokens[tokenIndex], tokenIndex + 1);
-    }
-
-    private static (ArgumentVector, int) ParseArgumentList(IReadOnlyList<Token> tokens, int tokenIndex, bool optional)
-    {
-        // TODO remove these exceptions and return diagnostic errors
-        if (tokenIndex >= tokens.Count) throw new Exception("Unexpected end of tokens :(");
-
-        if (tokens[tokenIndex].Type != TokenType.LeftParen)
-        {
-            Debug.WriteLine(optional ? "OPTIONAL!!!" : "Not optional");
-            // TODO fix this
-            return optional ? (null, tokenIndex) : throw new Exception($"Unexpected token :( arg list '{tokens[tokenIndex].Lexeme}' Line: {tokens[tokenIndex].Line.Item1} Column: {tokens[tokenIndex].Column.Item1}");
-        }
-
-        var openParen = tokens[tokenIndex];
-        var currentTokenIndex = tokenIndex + 1;
-
-        var arguments = new List<IArgumentValue>();
-        while (currentTokenIndex < tokens.Count && tokens[currentTokenIndex].Type != TokenType.RightParen)
-        {
-            var (value, nextIndex) = ParseArgument(tokens, currentTokenIndex);
-            if (nextIndex < tokens.Count && tokens[nextIndex].Type == TokenType.Comma)
+            return (new DocumentError
             {
-                currentTokenIndex = nextIndex + 1;
-            }
-            else
-            {
-                currentTokenIndex = nextIndex;
-            }
-            arguments.Add(value);
+                ErroredTokens = new List<Token> { namespaceToken },
+                Message = "Hit end of document while parsing a namespace node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
         }
 
-        var (closeParen, finalIndex) = ParseTokenByType(tokens, currentTokenIndex, TokenType.RightParen);
-
-        return (new ArgumentVector
+        var nextToken = tokens[tokenIndex];
+        if (nextToken.Type == TokenType.EmbeddedExpression)
         {
-            ArgumentValues = arguments,
-            OpenParen = openParen,
-            CloseParen = closeParen,
-            Colon = null,
-            Name = null,
+            return (new NamespaceNode
+            {
+                NamespaceToken = namespaceToken,
+                Value = nextToken
+            }, tokenIndex + 1);
+        }
+
+        var (errorTokens, finalIndex) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+        return (new DocumentError
+        {
+            ErroredTokens = errorTokens,
+            Message = $"Expected an embedded expression but got ({nextToken.Type}, '{nextToken.Lexeme}')",
+            Severity = DiagnosticSeverity.Error
         }, finalIndex);
     }
 
-    private static (ObjectBody, int) ParseObjectBody(IReadOnlyList<Token> tokens, int tokenIndex)
+    private static (IDocumentNode, int) ParseImportNode(IReadOnlyList<Token> tokens, int tokenIndex)
     {
-        var (openCurly, currentTokenIndex) = ParseTokenByType(tokens, tokenIndex, TokenType.LeftCurly);
-
-        var arguments = new List<IValue>();
-        while (currentTokenIndex < tokens.Count && tokens[currentTokenIndex].Type != TokenType.RightCurly)
+        // assume we check the namespace node already
+        var importToken = tokens[tokenIndex];
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
         {
-            var (value, nextIndex) = ParseValue(tokens, currentTokenIndex);
-            currentTokenIndex = nextIndex;
-            arguments.Add(value);
+            return (new DocumentError
+            {
+                ErroredTokens = new List<Token> { importToken },
+                Message = "Hit end of document while parsing an import node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
         }
 
-        var (closeCurly, finalIndex) = ParseTokenByType(tokens, currentTokenIndex, TokenType.RightCurly);
-
-        return (new ObjectBody
+        var nextToken = tokens[tokenIndex];
+        if (nextToken.Type == TokenType.EmbeddedExpression)
         {
-            Values = arguments,
-            OpenBrace = openCurly,
-            CloseBrace = closeCurly,
+            return (new ImportNode
+            {
+                ImportToken = importToken,
+                Value = nextToken
+            }, tokenIndex + 1);
+        }
+
+        var (errorTokens, finalIndex) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+        return (new DocumentError
+        {
+            ErroredTokens = errorTokens,
+            Message = $"Expected an embedded expression but got ({nextToken.Type}, '{nextToken.Lexeme}')",
+            Severity = DiagnosticSeverity.Error
         }, finalIndex);
     }
-
     
-
-    private static (IArgumentValue, int) ParseArgument(IReadOnlyList<Token> tokens, int tokenIndex)
+    private static (IDocumentNode, int) ParseVariableNode(IReadOnlyList<Token> tokens, int tokenIndex)
     {
-        var (identifier, nextIndex) = ParseTokenByType(tokens, tokenIndex, TokenType.Identifier);
-        var (colon, nextNextIndex) = ParseTokenByType(tokens, nextIndex, TokenType.Colon);
-
-        if (nextNextIndex >= tokens.Count)
+        // assume we check the namespace node already
+        var varToken = tokens[tokenIndex];
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
         {
-            // TODO remove these exceptions and report diagnostic errors
-            throw new Exception("Unexpected end of token input. ARGUMENT");
+            return (new DocumentError
+            {
+                ErroredTokens = new List<Token> { varToken },
+                Message = "Hit end of document while parsing an variable node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
         }
 
-        return tokens[nextNextIndex].Type switch
+        var nextToken = tokens[tokenIndex];
+        if (nextToken.Type == TokenType.EmbeddedExpression)
         {
-            TokenType.EmbeddedExpression or TokenType.String or TokenType.Number or TokenType.Identifier => (
-                new ArgumentScalar { Name = identifier, Colon = colon, Value = tokens[nextNextIndex] },
-                nextNextIndex + 1),
-            TokenType.LeftParen => ParseArgumentList(tokens, nextNextIndex, false),
-            // TODO remove these exceptions and report diagnostic errors
-            _ => throw new Exception($"Unexpected argument token :( '{tokens[nextNextIndex].Lexeme}' Line: {tokens[nextNextIndex].Line.Item1} Column: {tokens[nextNextIndex].Column.Item1}")
-        };
+            return (new ImportNode
+            {
+                ImportToken = varToken,
+                Value = nextToken
+            }, tokenIndex + 1);
+        }
+
+        var (errorTokens, finalIndex) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+        return (new DocumentError
+        {
+            ErroredTokens = errorTokens,
+            Message = $"Expected an embedded expression but got ({nextToken.Type}, '{nextToken.Lexeme}')",
+            Severity = DiagnosticSeverity.Error
+        }, finalIndex);
     }
+
 }

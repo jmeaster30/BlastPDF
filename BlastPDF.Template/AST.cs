@@ -1,263 +1,298 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 
 namespace BlastPDF.Template;
 
-public interface IValue
+public interface IAstNode
 {
-    public string ToString();
     public string GenerateSource();
-    public bool IsObjectOfType(string objectName);
+    public bool Is<T>();
+    public IEnumerable<Diagnostic> GetErrors(string filepath);
 }
 
-public class Error : IValue
+public interface IDocumentNode : IAstNode {}
+public interface IPageNode : IAstNode {}
+public interface IExpressionNode : IAstNode {}
+
+public class DocumentError : IDocumentNode
 {
-    public Token ErrorToken { get; set; }
+    public List<Token> ErroredTokens { get; set; }
     public string Message { get; set; }
     public DiagnosticSeverity Severity { get; set; }
 
-    public new string ToString()
-    {
-        return $"(ERROR {Severity} '{Message.Replace("\"", "\"\"")}' '{ErrorToken.Lexeme.Replace("\"", "\"\"")}')";
-    }
-
-    public bool IsObjectOfType(string s)
-    {
-        return s == "Error";
-    }
-
     public string GenerateSource()
     {
-        return "";
+        return "ERROR";
+    }
+
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(DocumentError);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        var start = ErroredTokens.FirstOrDefault();
+        var end = ErroredTokens.LastOrDefault();
+        
+        var textSpanStart = start?.Offset.Item1 ?? 0;
+        var textSpanEnd = end?.Offset.Item2 ?? 0;
+
+        var lineStart = start == null ? 0 : start.Line.Item1 - 1;
+        var lineEnd = end == null ? 0 : end.Line.Item2 - 1;
+        var columnStart = start == null ? 0 : start.Column.Item1 - 1;
+        var columnEnd = end == null ? 0 : end.Column.Item2 - 1;
+
+        return new List<Diagnostic>
+        {
+            Diagnostic.Create(
+                new DiagnosticDescriptor(
+                    "BLASTPDF",
+                    "BlastPDF Template Error",
+                    Message,
+                    "BlastPDF Template Error",
+                    Severity,
+                    true),
+                Location.Create(
+                    filepath,
+                    new TextSpan(textSpanStart, textSpanEnd - textSpanStart),
+                    new LinePositionSpan(
+                        new LinePosition(lineStart, columnStart),
+                        new LinePosition(lineEnd, columnEnd))))
+        };
     }
 }
 
-public class Object : IValue
+public class PageError : IPageNode
 {
-    public Token Name { get; set; }
-    public ArgumentVector? ArgumentList { get; set; }
-    public ObjectBody Body { get; set; }
-    
-    public new string ToString()
-    {
-        return $"(Object '{Name.Lexeme.Replace("\"", "\"\"")}' {ArgumentList?.ToString() ?? "(No Args)"} {Body.ToString()})";
-    }
-    
-    public bool IsObjectOfType(string s)
-    {
-        return Name.Lexeme == s;
-    }
-    
+    public List<Token> ErroredTokens { get; set; }
+    public string Message { get; set; }
+    public DiagnosticSeverity Severity { get; set; }
     public string GenerateSource()
     {
-        var result = "";
-        if (Name.Lexeme == "Document")
-        {
-            result = "PdfDocument.Create()";
-            // turn argument list into metadata dictonary
-            if (ArgumentList is not null)
-            {
-                result += ".AddMetadata(\n";
-                result += ArgumentList.GenerateDocumentMetadata();
-                result += "\n)";
-            }
-            result += Body.GenerateSource();
-            return result;
-        }
-        else if (Name.Lexeme == "Imports")
-        {
-            foreach (var content in Body.Values)
-            {
-                // TODO need to error instead of just ignoring invalid objects
-                if (content is Literal literal && literal.Value.Type == TokenType.EmbeddedExpression)
-                {
-                    result += $"using {string.Join("", literal.Value.Lexeme.Skip(2).Take(literal.Value.Lexeme.Length - 3))};\n";
-                }
-            }
-        }
-        else if (Name.Lexeme == "Variables")
-        {
-            foreach (var content in Body.Values)
-            {
-                // TODO need to error instead of just ignoring invalid objects
-                if (content is Literal literal && literal.Value.Type == TokenType.EmbeddedExpression)
-                {
-                    result += $"public {string.Join("", literal.Value.Lexeme.Skip(2).Take(literal.Value.Lexeme.Length - 3))} {{ get; set; }}\n";
-                }
-            }
-        }
-        else if (Name.Lexeme == "Namespace")
-        {
-            var namespaceLiteral = Body.Values.Single(x => x.IsObjectOfType("Literal") && (x as Literal)?.Value.Type == TokenType.EmbeddedExpression);
-            if (namespaceLiteral is Literal literal)
-            {
-                result = $"namespace {string.Join("", literal.Value.Lexeme.Skip(2).Take(literal.Value.Lexeme.Length - 3))};";
-            }
-        }
-        return result;
+        throw new NotImplementedException();
+    }
+
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(PageError);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        throw new NotImplementedException();
     }
 }
 
-public class Literal : IValue
+public class ExpressionError : IExpressionNode
+{
+    public List<Token> ErroredTokens { get; set; }
+    public string Message { get; set; }
+    public DiagnosticSeverity Severity { get; set; }
+    public string GenerateSource()
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(ExpressionError);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class NumberValue : IExpressionNode
 {
     public Token Value { get; set; }
-    
-    public new string ToString()
-    {
-        return $"(Value {Value.Type} '{Value.Lexeme.Replace("\"", "\"\"")}')";
-    }
-    
-    public bool IsObjectOfType(string s)
-    {
-        return s == "Literal";
-    }
-    
+    public Token Unit { get; set; }
     public string GenerateSource()
     {
-        return "";
+        throw new NotImplementedException();
     }
-}
- 
-public interface IArgumentValue
-{
-    public Token? Name { get; set; }
-    public Token? Colon { get; set; }
-    public string ToString();
-    public string GenerateSource();
-    public string GenerateDocumentMetadata();
-}
 
-public class ObjectBody
-{
-    public Token OpenBrace { get; set; }
-    public List<IValue> Values { get; set; }
-    public Token CloseBrace { get; set; }
-    
-    public new string ToString()
+    public bool Is<T>()
     {
-        return Values.Aggregate("(Body ", (current, value) => current + value.ToString() + " ") + ")";
+        return typeof(T) == typeof(NumberValue);
     }
-    
-    public string GenerateSource()
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
     {
-        return "";
+        return new List<Diagnostic>();
     }
 }
 
-public class ArgumentVector : IArgumentValue
+public class NamespaceNode : IDocumentNode
 {
-    public Token? Name { get; set; }
-    public Token? Colon { get; set; }
-    public Token OpenParen { get; set; }
-    public List<IArgumentValue> ArgumentValues { get; set; }
-    public Token CloseParen { get; set; }
-    
-    public new string ToString()
-    {
-        if (Name == null)
-        {
-            return ArgumentValues.Aggregate("(Args ", (current, value) => current + value.ToString() + " ") + ")";
-        }
-
-        return ArgumentValues.Aggregate($"({Name.Lexeme.Replace("\"", "\"\"")} : ",
-            (current, value) => current + value.ToString() + " ") + ")";
-    }
-
-    public string GenerateDocumentMetadata()
-    {
-        var value = "new Dictionary<string, IPdfValue>{\n";
-        for (var i = 0; i < ArgumentValues.Count; i++)
-        {
-            value += ArgumentValues[i].GenerateDocumentMetadata();
-            if (i < ArgumentValues.Count - 1)
-            {
-                value += ",";
-            }
-
-            value += "\n";
-        }
-        value += "}\n";
-
-        var result = "";
-        if (Name is null)
-        {
-            result = value;
-        }
-        else
-        {
-            result = $"{{\"{Name.Lexeme}\", ({value}).ToPdfValue()}}";
-        }
-
-        return result;
-    }
-    
-    public string GenerateSource()
-    {
-        return "";
-    }
-}
-
-public class ArgumentScalar : IArgumentValue
-{
-    public Token? Name { get; set; }
-    public Token? Colon { get; set; }
+    public Token NamespaceToken { get; set; }
     public Token Value { get; set; }
-    
-    public new string ToString()
-    {
-        return $"({Name.Lexeme.Replace("\"", "\"\"")} : {Value.Lexeme.Replace("\"", "\"\"")})";
-    }
-
-    public string GenerateDocumentMetadata()
-    {
-        var value = Value.Lexeme;
-        if (Value.Type == TokenType.EmbeddedExpression)
-        {
-            value = string.Join("", Value.Lexeme.Skip(2).Take(Value.Lexeme.Length - 3));
-        }
-        else if (Value.Type == TokenType.String)
-        {
-            value = "$\"";
-            var stringIndex = 1;
-            while (stringIndex < Value.Lexeme.Length - 1)
-            {
-                switch (Value.Lexeme[stringIndex])
-                {
-                    case '"':
-                        value += "\\\"";
-                        break;
-                    case '@':
-                    {
-                        stringIndex += 1;
-                        while (stringIndex < Value.Lexeme.Length - 1 && Value.Lexeme[stringIndex] != '}')
-                        {
-                            value += Value.Lexeme[stringIndex];
-                            stringIndex += 1;
-                        }
-                        value += Value.Lexeme[stringIndex];
-                        break;
-                    }
-                    default:
-                        value += Value.Lexeme[stringIndex];
-                        break;
-                }
-                stringIndex += 1;
-            }
-            value += '"';
-        }
-
-        return $"{{\"{Name.Lexeme}\", ({value}).ToPdfValue()}}";
-    }
-    
     public string GenerateSource()
     {
-        return "";
+        throw new NotImplementedException();
+    }
+
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(NamespaceNode);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        return new List<Diagnostic>();
+    }
+}
+
+public class ImportNode : IDocumentNode
+{
+    public Token ImportToken { get; set; }
+    public Token Value { get; set; }
+    public string GenerateSource()
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(ImportNode);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepaths)
+    {
+        return new List<Diagnostic>();
+    }
+}
+
+public class VariableNode : IDocumentNode
+{
+    public Token VariableToken { get; set; }
+    public Token Value { get; set; }
+    public string GenerateSource()
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(VariableNode);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        return new List<Diagnostic>();
+    }
+}
+
+public class TitleNode : IDocumentNode
+{
+    public Token TitleToken { get; set; }
+    public IExpressionNode Expression { get; set; }
+    public string GenerateSource()
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(TitleNode);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        return new List<Diagnostic>();
+    }
+}
+
+public class CreationDateNode : IDocumentNode
+{
+    public Token CreationDateToken { get; set; }
+    public IExpressionNode Expression { get; set; }
+    public string GenerateSource()
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(CreationDateNode);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        return new List<Diagnostic>();
+    }
+}
+
+public class AuthorNode : IDocumentNode
+{
+    public Token AuthorToken { get; set; }
+    public IExpressionNode Expression { get; set; }
+    public string GenerateSource()
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(AuthorNode);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        return new List<Diagnostic>();
+    }
+}
+
+public class LoadNode : IDocumentNode
+{
+    public Token LoadToken { get; set; }
+    public Token TypeToken { get; set; }
+    public Token IdentifierToken { get; set; }
+    public IExpressionNode Expression { get; set; }
+    public string GenerateSource()
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(LoadNode);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        return new List<Diagnostic>();
+    }
+}
+
+public class AddPageNode : IDocumentNode
+{
+    public Token PageToken { get; set; }
+    public Token TypeToken { get; set; }
+    public List<IPageNode> PageNodes { get; set; }
+    public Token EndToken { get; set; }
+    public string GenerateSource()
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(AddPageNode);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        return PageNodes.GetErrors(filepath);
     }
 }
 
 public static class AstExtensions
 {
-    public static string String(this IEnumerable<IValue> values)
+    public static IEnumerable<Diagnostic> GetErrors(this IEnumerable<IAstNode> nodes, string filepath)
     {
-        return values.Aggregate("(", (current, value) => current + value.ToString() + " ") + ")";
+        return nodes.SelectMany(x => x.GetErrors(filepath));
     }
 }

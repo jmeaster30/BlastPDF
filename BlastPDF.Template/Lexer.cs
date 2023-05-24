@@ -214,6 +214,12 @@ public class TokenEnumerator : IEnumerator<Token>
                     throw new Exception("LEXER ERROR");
                 }
                 break;
+            case '%':
+                lexeme += _source[_sourcePosition];
+                _sourcePosition += 1;
+                _currentColumnNumber += 1;
+                type = TokenType.Percent;
+                break;
             case >= 'a' and <= 'z' or >= 'A' and <= 'Z' or '_':
                 lexeme += _source[_sourcePosition];
                 _sourcePosition += 1;
