@@ -6,7 +6,7 @@ import @{System.Collections.Generic}
 
 // only allowed at the top and always lifted since these will be member variables of the class
 variable @{Person Author}
-variable "oh yeah" 1298739
+variable @{int test}
 variable @{IQueryable<BigData> DatabaseData}
 variable @{DbContext myDbContext}
 

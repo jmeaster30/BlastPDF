@@ -125,6 +125,44 @@ public class NumberValue : IExpressionNode
     }
 }
 
+public class StringValue : IExpressionNode
+{
+    public Token Value { get; set; }
+    public string GenerateSource()
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(StringValue);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        return new List<Diagnostic>();
+    }
+}
+
+public class ExpressionValue : IExpressionNode
+{
+    public Token Value { get; set; }
+    public string GenerateSource()
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(StringValue);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        return new List<Diagnostic>();
+    }
+}
+
 public class NamespaceNode : IDocumentNode
 {
     public Token NamespaceToken { get; set; }
@@ -201,7 +239,7 @@ public class TitleNode : IDocumentNode
 
     public IEnumerable<Diagnostic> GetErrors(string filepath)
     {
-        return new List<Diagnostic>();
+        return Expression.GetErrors(filepath);
     }
 }
 
@@ -221,7 +259,7 @@ public class CreationDateNode : IDocumentNode
 
     public IEnumerable<Diagnostic> GetErrors(string filepath)
     {
-        return new List<Diagnostic>();
+        return Expression.GetErrors(filepath);
     }
 }
 
@@ -241,7 +279,7 @@ public class AuthorNode : IDocumentNode
 
     public IEnumerable<Diagnostic> GetErrors(string filepath)
     {
-        return new List<Diagnostic>();
+        return Expression.GetErrors(filepath);
     }
 }
 
@@ -250,7 +288,7 @@ public class LoadNode : IDocumentNode
     public Token LoadToken { get; set; }
     public Token TypeToken { get; set; }
     public Token IdentifierToken { get; set; }
-    public IExpressionNode Expression { get; set; }
+    public IExpressionNode? Expression { get; set; }
     public string GenerateSource()
     {
         throw new NotImplementedException();
@@ -263,7 +301,7 @@ public class LoadNode : IDocumentNode
 
     public IEnumerable<Diagnostic> GetErrors(string filepath)
     {
-        return new List<Diagnostic>();
+        return Expression?.GetErrors(filepath) ?? new List<Diagnostic>();
     }
 }
 

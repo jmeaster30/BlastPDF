@@ -7,7 +7,7 @@ namespace BlastPDF.Template;
 
 public class Parser
 {
-    public static List<IDocumentNode> Parse(string content)
+    public static IEnumerable<IDocumentNode> Parse(string content)
     {
         var lexer = new Lexer(content);
         var meaningfulTokens = lexer
@@ -17,7 +17,7 @@ public class Parser
         return ParseDocumentStatements(meaningfulTokens);
     }
 
-    private static List<IDocumentNode> ParseDocumentStatements(IReadOnlyList<Token> tokens)
+    private static IEnumerable<IDocumentNode> ParseDocumentStatements(IReadOnlyList<Token> tokens)
     {
         var tokenIndex = 0;
         var results = new List<IDocumentNode>();
@@ -43,6 +43,41 @@ public class Parser
                 case TokenType.Variable:
                 {
                     var (node, idx) = ParseVariableNode(tokens, tokenIndex);
+                    results.Add(node);
+                    tokenIndex = idx;
+                    break;
+                }
+                case TokenType.Title:
+                {
+                    var (node, idx) = ParseTitleNode(tokens, tokenIndex);
+                    results.Add(node);
+                    tokenIndex = idx;
+                    break;
+                }
+                case TokenType.CreationDate:
+                {
+                    var (node, idx) = ParseCreationNode(tokens, tokenIndex);
+                    results.Add(node);
+                    tokenIndex = idx;
+                    break;
+                }
+                case TokenType.Author:
+                {
+                    var (node, idx) = ParseAuthorNode(tokens, tokenIndex);
+                    results.Add(node);
+                    tokenIndex = idx;
+                    break;
+                }
+                case TokenType.Load:
+                {
+                    var (node, idx) = ParseLoadNode(tokens, tokenIndex);
+                    results.Add(node);
+                    tokenIndex = idx;
+                    break;
+                }
+                case TokenType.Page:
+                {
+                    var (node, idx) = ParsePageNode(tokens, tokenIndex);
                     results.Add(node);
                     tokenIndex = idx;
                     break;
@@ -74,7 +109,7 @@ public class Parser
 
     private static bool IsDocumentNodeToken(TokenType type)
     {
-        return type is not (TokenType.Namespace or TokenType.Import);
+        return type is not (TokenType.Namespace or TokenType.Import or TokenType.Variable or TokenType.Title or TokenType.Author or TokenType.CreationDate or TokenType.Load);
     }
 
     private static (List<Token>, int) ConsumeUntilNextDocumentNode(IReadOnlyList<Token> tokens, int tokenIndex)
@@ -90,7 +125,7 @@ public class Parser
 
     private static (IDocumentNode, int) ParseNamespaceNode(IReadOnlyList<Token> tokens, int tokenIndex)
     {
-        // assume we check the namespace node already
+        // assume we check the namespace token already
         var namespaceToken = tokens[tokenIndex];
         tokenIndex += 1;
         if (tokenIndex >= tokens.Count)
@@ -124,7 +159,7 @@ public class Parser
 
     private static (IDocumentNode, int) ParseImportNode(IReadOnlyList<Token> tokens, int tokenIndex)
     {
-        // assume we check the namespace node already
+        // assume we check the import token already
         var importToken = tokens[tokenIndex];
         tokenIndex += 1;
         if (tokenIndex >= tokens.Count)
@@ -158,7 +193,7 @@ public class Parser
     
     private static (IDocumentNode, int) ParseVariableNode(IReadOnlyList<Token> tokens, int tokenIndex)
     {
-        // assume we check the namespace node already
+        // assume we check the variable token already
         var varToken = tokens[tokenIndex];
         tokenIndex += 1;
         if (tokenIndex >= tokens.Count)
@@ -174,9 +209,9 @@ public class Parser
         var nextToken = tokens[tokenIndex];
         if (nextToken.Type == TokenType.EmbeddedExpression)
         {
-            return (new ImportNode
+            return (new VariableNode
             {
-                ImportToken = varToken,
+                VariableToken = varToken,
                 Value = nextToken
             }, tokenIndex + 1);
         }
@@ -189,5 +224,249 @@ public class Parser
             Severity = DiagnosticSeverity.Error
         }, finalIndex);
     }
+    
+    private static (IDocumentNode, int) ParseTitleNode(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        // assume we check the title token already
+        var titleToken = tokens[tokenIndex];
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        {
+            return (new DocumentError
+            {
+                ErroredTokens = new List<Token> { titleToken },
+                Message = "Hit end of document while parsing a title node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
+        }
 
+        var token = tokens[tokenIndex];
+        IExpressionNode expr;
+        switch (token.Type)
+        {
+            case TokenType.String:
+                expr = new StringValue
+                {
+                    Value = token
+                };
+                break;
+            case TokenType.EmbeddedExpression:
+                expr = new ExpressionValue
+                {
+                    Value = token
+                };
+                break;
+            default:
+                return (new DocumentError
+                {
+                    ErroredTokens = new List<Token> { titleToken },
+                    Message =
+                        $"Found a title statement but got an ({token.Type}, '{token.Lexeme}') instead of a string or an embedded expression",
+                    Severity = DiagnosticSeverity.Error
+                }, tokenIndex + 1);
+        }
+
+        return (new TitleNode
+        {
+            TitleToken = titleToken,
+            Expression = expr
+        }, tokenIndex + 1);
+    }
+    
+    private static (IDocumentNode, int) ParseCreationNode(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        // assume we check the creationdate token already
+        var createToken = tokens[tokenIndex];
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        {
+            return (new DocumentError
+            {
+                ErroredTokens = new List<Token> { createToken },
+                Message = "Hit end of document while parsing a title node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
+        }
+
+        var token = tokens[tokenIndex];
+        IExpressionNode expr;
+        switch (token.Type)
+        {
+            case TokenType.String:
+                expr = new StringValue
+                {
+                    Value = token
+                };
+                break;
+            case TokenType.EmbeddedExpression:
+                expr = new ExpressionValue
+                {
+                    Value = token
+                };
+                break;
+            default:
+                return (new DocumentError
+                {
+                    ErroredTokens = new List<Token> { createToken },
+                    Message =
+                        $"Found a creationdate statement but got an ({token.Type}, '{token.Lexeme}') instead of a string or an embedded expression",
+                    Severity = DiagnosticSeverity.Error
+                }, tokenIndex + 1);
+        }
+
+        return (new CreationDateNode
+        {
+            CreationDateToken = createToken,
+            Expression = expr
+        }, tokenIndex + 1);
+    }
+    
+    private static (IDocumentNode, int) ParseAuthorNode(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        // assume we check the author token already
+        var authorToken = tokens[tokenIndex];
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        {
+            return (new DocumentError
+            {
+                ErroredTokens = new List<Token> { authorToken },
+                Message = "Hit end of document while parsing an author node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
+        }
+
+        var token = tokens[tokenIndex];
+        IExpressionNode expr;
+        switch (token.Type)
+        {
+            case TokenType.String:
+                expr = new StringValue
+                {
+                    Value = token
+                };
+                break;
+            case TokenType.EmbeddedExpression:
+                expr = new ExpressionValue
+                {
+                    Value = token
+                };
+                break;
+            default:
+                return (new DocumentError
+                {
+                    ErroredTokens = new List<Token> { authorToken },
+                    Message =
+                        $"Found a author statement but got an ({token.Type}, '{token.Lexeme}') instead of a string or an embedded expression",
+                    Severity = DiagnosticSeverity.Error
+                }, tokenIndex + 1);
+        }
+
+        return (new AuthorNode
+        {
+            AuthorToken = authorToken,
+            Expression = expr
+        }, tokenIndex + 1);
+    }
+
+    private static (IDocumentNode, int) ParseLoadNode(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        // assume we checked the load token already
+        var loadToken = tokens[tokenIndex];
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        {
+            return (new DocumentError
+            {
+                ErroredTokens = new List<Token> { loadToken },
+                Message = "Hit end of document while parsing a load node",
+                Severity = DiagnosticSeverity.Error
+            }, tokenIndex);
+        }
+
+        var typeToken = tokens[tokenIndex];
+        switch (typeToken.Type)
+        {
+            case TokenType.Font:
+            case TokenType.Image:
+                break;
+            default:
+                var (erroredTokens, idx) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+                return (new DocumentError
+                {
+                    ErroredTokens = erroredTokens,
+                    Message =
+                        $"Unexpected type of load statement. Expected 'font' or 'image' but got ({typeToken.Type}, '{typeToken.Lexeme}')",
+                    Severity = DiagnosticSeverity.Error,
+                }, idx);
+        }
+        
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        {
+            return (new DocumentError
+            {
+                ErroredTokens = new List<Token> { loadToken, typeToken },
+                Message = "Hit end of document while parsing a load node",
+                Severity = DiagnosticSeverity.Error
+            }, tokenIndex);
+        }
+
+        var identifierToken = tokens[tokenIndex];
+        if (identifierToken.Type != TokenType.Identifier)
+        {
+            var (erroredTokens, idx) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+            return (new DocumentError
+            {
+                ErroredTokens = erroredTokens,
+                Message =
+                    $"Unexpected token. Expected an identifier but got ({identifierToken.Type}, '{identifierToken.Lexeme}')",
+                Severity = DiagnosticSeverity.Error,
+            }, idx);
+        }
+
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count || !(tokens[tokenIndex].Type == TokenType.EmbeddedExpression || tokens[tokenIndex].Type == TokenType.String))
+        {
+            return (new LoadNode
+            {
+                LoadToken = loadToken,
+                TypeToken = typeToken,
+                IdentifierToken = identifierToken,
+                Expression = null
+            }, tokenIndex);
+        }
+
+        return tokens[tokenIndex].Type switch
+        {
+            TokenType.EmbeddedExpression => (
+                new LoadNode
+                {
+                    LoadToken = loadToken,
+                    TypeToken = typeToken,
+                    IdentifierToken = identifierToken,
+                    Expression = new ExpressionValue { Value = tokens[tokenIndex] }
+                }, tokenIndex + 1),
+            TokenType.String => (
+                new LoadNode
+                {
+                    LoadToken = loadToken,
+                    TypeToken = typeToken,
+                    IdentifierToken = identifierToken,
+                    Expression = new StringValue { Value = tokens[tokenIndex] }
+                }, tokenIndex + 1),
+            _ => (
+                new DocumentError
+                {
+                    ErroredTokens = new List<Token> { loadToken, typeToken, identifierToken, tokens[tokenIndex] },
+                    Message = "UNEXPECTED CASE HIT",
+                    Severity = DiagnosticSeverity.Error
+                }, tokenIndex + 1)
+        };
+    }
+
+    private static (IDocumentNode, int) ParsePageNode(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        
+    }
 }
