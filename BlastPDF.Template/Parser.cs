@@ -109,7 +109,7 @@ public class Parser
 
     private static bool IsDocumentNodeToken(TokenType type)
     {
-        return type is not (TokenType.Namespace or TokenType.Import or TokenType.Variable or TokenType.Title or TokenType.Author or TokenType.CreationDate or TokenType.Load);
+        return type is not (TokenType.Namespace or TokenType.Import or TokenType.Variable or TokenType.Title or TokenType.Author or TokenType.CreationDate or TokenType.Load or TokenType.Page);
     }
 
     private static (List<Token>, int) ConsumeUntilNextDocumentNode(IReadOnlyList<Token> tokens, int tokenIndex)
@@ -467,6 +467,109 @@ public class Parser
 
     private static (IDocumentNode, int) ParsePageNode(IReadOnlyList<Token> tokens, int tokenIndex)
     {
-        
+        // assume we checked the page token already
+        var pageToken = tokens[tokenIndex];
+        var startTokenIndex = tokenIndex;
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        {
+            return (new DocumentError
+            {
+                ErroredTokens = new List<Token> { pageToken },
+                Message = "Hit end of document while parsing a page node",
+                Severity = DiagnosticSeverity.Error
+            }, tokenIndex);
+        }
+
+        var typeToken = tokens[tokenIndex];
+        switch (typeToken.Type)
+        {
+            case TokenType.Single:
+            case TokenType.Layout:
+                break;
+            default:
+                var (erroredTokens, idx) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+                return (new DocumentError
+                {
+                    ErroredTokens = erroredTokens,
+                    Message =
+                        $"Unexpected type of page statement. Expected 'single' or 'layout' but got ({typeToken.Type}, '{typeToken.Lexeme}')",
+                    Severity = DiagnosticSeverity.Error,
+                }, idx);
+        }
+
+        tokenIndex += 1;
+        var results = new List<IPageNode>();
+        while (tokenIndex < tokens.Count && tokens[tokenIndex].Type == TokenType.End)
+        {
+            var (pageNode, idx) = ParsePageStatement(tokens, tokenIndex);
+            results.Add(pageNode);
+            tokenIndex = idx;
+        }
+
+        if (tokenIndex >= tokens.Count)
+        {
+            return (new DocumentError
+            {
+                ErroredTokens = tokens.Skip(startTokenIndex).Take(tokenIndex - startTokenIndex).ToList(),
+                Message = "Hit end of document while parsing a page node",
+            }, tokenIndex);
+        }
+
+        return (new AddPageNode
+        {
+            PageToken = pageToken,
+            TypeToken = typeToken,
+            PageNodes = results,
+            EndToken = tokens[tokenIndex]
+        }, tokenIndex + 1);
+    }
+    
+    private static bool IsPageNodeToken(TokenType type)
+    {
+        return type is not (TokenType.Width or TokenType.Height or TokenType.Margin or TokenType.Header or TokenType.Body or TokenType.Footer or TokenType.Dpi or TokenType.End);
+    }
+
+    private static (List<Token>, int) ConsumeUntilNextPageNode(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        var results = new List<Token>(); 
+        while (tokenIndex < tokens.Count && IsPageNodeToken(tokens[tokenIndex].Type))
+        {
+            results.Add(tokens[tokenIndex]);
+            tokenIndex += 1;
+        }
+        return (results, tokenIndex);
+    }
+
+    private static (IPageNode, int) ParsePageStatement(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        var currentToken = tokens[tokenIndex];
+        switch (currentToken.Type)
+        {
+            case TokenType.Width:
+                return ParseWidthNode(tokens, tokenIndex);
+            case TokenType.Height:
+                return ParseHeightNode(tokens, tokenIndex);
+            case TokenType.Margin:
+                return ParseMarginNode(tokens, tokenIndex);
+            case TokenType.Header:
+                return ParseHeaderNode(tokens, tokenIndex);
+            case TokenType.Body:
+                return ParseBodyNode(tokens, tokenIndex);
+            case TokenType.Footer:
+                return ParseFooterNode(tokens, tokenIndex);
+            case TokenType.Dpi:
+                return ParseDpiNode(tokens, tokenIndex);
+            default:
+            {
+                var (errorTokens, idx) = ConsumeUntilNextPageNode(tokens, tokenIndex);
+                return (new PageError
+                {
+                    ErroredTokens = errorTokens,
+                    Message = $"Unexpected token ({currentToken.Type}, '{currentToken.Lexeme}') expected a page level statement.",
+                    Severity = DiagnosticSeverity.Error
+                }, idx);
+            }
+        }
     }
 }

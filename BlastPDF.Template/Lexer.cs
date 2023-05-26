@@ -253,6 +253,7 @@ public class TokenEnumerator : IEnumerator<Token>
                     "header" => TokenType.Header,
                     "body" => TokenType.Body,
                     "footer" => TokenType.Footer,
+                    "dpi" => TokenType.Dpi,
                     "width" => TokenType.Width,
                     "height" => TokenType.Height,
                     "margin" => TokenType.Margin,

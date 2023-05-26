@@ -36,6 +36,7 @@ public enum TokenType {
     Body,
     Footer,
     
+    Dpi,
     Width,
     Height,
     Margin,
