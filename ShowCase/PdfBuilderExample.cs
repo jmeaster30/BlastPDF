@@ -111,7 +111,7 @@ public class PdfBuilderExample
         
         using var templateFile = File.Create("template_test.pdf");
         
-        var template = new TestTemplate {
+        var template = new TestLayout {
             Author = new Person
             {
                 FirstName = "John",

@@ -14,7 +14,6 @@ title 'Big Serious Report @{DateTime.UtcNow.ToString("MMMM yyyy")}'
 creationdate @{DateTime.UtcNow}
 author "@{Author.FirstName} @{Author.LastName}"
 
-// should we add in default fonts?
 // only allowed on the top level and generates an xobject
 load font Helvetica
 

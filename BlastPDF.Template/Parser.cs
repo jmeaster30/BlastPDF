@@ -257,13 +257,14 @@ public class Parser
                 };
                 break;
             default:
+                var (erroredTokens, idx) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
                 return (new DocumentError
                 {
-                    ErroredTokens = new List<Token> { titleToken },
+                    ErroredTokens = erroredTokens,
                     Message =
                         $"Found a title statement but got an ({token.Type}, '{token.Lexeme}') instead of a string or an embedded expression",
                     Severity = DiagnosticSeverity.Error
-                }, tokenIndex + 1);
+                }, idx);
         }
 
         return (new TitleNode
@@ -305,13 +306,14 @@ public class Parser
                 };
                 break;
             default:
+                var (erroredTokens, idx) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
                 return (new DocumentError
                 {
-                    ErroredTokens = new List<Token> { createToken },
+                    ErroredTokens = erroredTokens,
                     Message =
                         $"Found a creationdate statement but got an ({token.Type}, '{token.Lexeme}') instead of a string or an embedded expression",
                     Severity = DiagnosticSeverity.Error
-                }, tokenIndex + 1);
+                }, idx);
         }
 
         return (new CreationDateNode
@@ -353,13 +355,14 @@ public class Parser
                 };
                 break;
             default:
+                var (erroredTokens, idx) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
                 return (new DocumentError
                 {
-                    ErroredTokens = new List<Token> { authorToken },
+                    ErroredTokens = erroredTokens,
                     Message =
                         $"Found a author statement but got an ({token.Type}, '{token.Lexeme}') instead of a string or an embedded expression",
                     Severity = DiagnosticSeverity.Error
-                }, tokenIndex + 1);
+                }, idx);
         }
 
         return (new AuthorNode
@@ -500,11 +503,18 @@ public class Parser
 
         tokenIndex += 1;
         var results = new List<IPageNode>();
-        while (tokenIndex < tokens.Count && tokens[tokenIndex].Type == TokenType.End)
+        while (tokenIndex < tokens.Count && tokens[tokenIndex].Type != TokenType.End)
         {
             var (pageNode, idx) = ParsePageStatement(tokens, tokenIndex);
             results.Add(pageNode);
-            tokenIndex = idx;
+            if (tokenIndex == idx)
+            {
+                tokenIndex = idx + 1;
+            }
+            else
+            {
+                tokenIndex = idx;
+            }
         }
 
         if (tokenIndex >= tokens.Count)
@@ -514,6 +524,16 @@ public class Parser
                 ErroredTokens = tokens.Skip(startTokenIndex).Take(tokenIndex - startTokenIndex).ToList(),
                 Message = "Hit end of document while parsing a page node",
             }, tokenIndex);
+        }
+
+        if (tokens[tokenIndex].Type != TokenType.End)
+        {
+            var (erroredTokens, idx) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+            return (new DocumentError
+            {
+                ErroredTokens = erroredTokens,
+                Message = "Unexpected token. Expected 'end'",
+            }, idx);
         }
 
         return (new AddPageNode
@@ -550,16 +570,16 @@ public class Parser
                 return ParseWidthNode(tokens, tokenIndex);
             case TokenType.Height:
                 return ParseHeightNode(tokens, tokenIndex);
-            case TokenType.Margin:
-                return ParseMarginNode(tokens, tokenIndex);
-            case TokenType.Header:
-                return ParseHeaderNode(tokens, tokenIndex);
-            case TokenType.Body:
-                return ParseBodyNode(tokens, tokenIndex);
-            case TokenType.Footer:
-                return ParseFooterNode(tokens, tokenIndex);
             case TokenType.Dpi:
                 return ParseDpiNode(tokens, tokenIndex);
+            case TokenType.Margin:
+                return ParseMarginNode(tokens, tokenIndex);
+            //case TokenType.Header:
+            //    return ParseHeaderNode(tokens, tokenIndex);
+            //case TokenType.Body:
+            //    return ParseBodyNode(tokens, tokenIndex);
+            //case TokenType.Footer:
+            //    return ParseFooterNode(tokens, tokenIndex);
             default:
             {
                 var (errorTokens, idx) = ConsumeUntilNextPageNode(tokens, tokenIndex);
@@ -571,5 +591,233 @@ public class Parser
                 }, idx);
             }
         }
+    }
+
+    private static (IPageNode, int) ParseWidthNode(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        // we have already verified this is a width token
+        var widthToken = tokens[tokenIndex];
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        {
+            return (new PageError
+            {
+                ErroredTokens = new List<Token> { widthToken },
+                Message = "Hit end of document while parsing a width node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
+        }
+
+        var token = tokens[tokenIndex];
+        IExpressionNode expr;
+        switch (token.Type)
+        {
+            case TokenType.Number:
+                expr = new StringValue
+                {
+                    Value = token
+                };
+                break;
+            case TokenType.EmbeddedExpression:
+                expr = new ExpressionValue
+                {
+                    Value = token
+                };
+                break;
+            default:
+                var (errorTokens, idx) = ConsumeUntilNextPageNode(tokens, tokenIndex);
+                return (new PageError
+                {
+                    ErroredTokens = errorTokens,
+                    Message =
+                        $"Found a width statement but got an ({token.Type}, '{token.Lexeme}') instead of a string or an embedded expression",
+                    Severity = DiagnosticSeverity.Error
+                }, idx);
+        }
+
+        return (new WidthNode
+        {
+            WidthToken = widthToken,
+            Expression = expr
+        }, tokenIndex + 1);
+    }
+    
+    private static (IPageNode, int) ParseHeightNode(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        // we have already verified this is a width token
+        var heightToken = tokens[tokenIndex];
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        {
+            return (new PageError
+            {
+                ErroredTokens = new List<Token> { heightToken },
+                Message = "Hit end of document while parsing a height node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
+        }
+
+        var token = tokens[tokenIndex];
+        IExpressionNode expr;
+        switch (token.Type)
+        {
+            case TokenType.Number:
+                expr = new StringValue
+                {
+                    Value = token
+                };
+                break;
+            case TokenType.EmbeddedExpression:
+                expr = new ExpressionValue
+                {
+                    Value = token
+                };
+                break;
+            default:
+                var (errorTokens, idx) = ConsumeUntilNextPageNode(tokens, tokenIndex);
+                return (new PageError
+                {
+                    ErroredTokens = errorTokens,
+                    Message =
+                        $"Found a height statement but got an ({token.Type}, '{token.Lexeme}') instead of a number or an embedded expression",
+                    Severity = DiagnosticSeverity.Error
+                }, idx);
+        }
+
+        return (new HeightNode
+        {
+            HeightToken = heightToken,
+            Expression = expr
+        }, tokenIndex + 1);
+    }
+    
+    private static (IPageNode, int) ParseDpiNode(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        // we have already verified this is a dpi token
+        var dpiToken = tokens[tokenIndex];
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        {
+            return (new PageError
+            {
+                ErroredTokens = new List<Token> { dpiToken },
+                Message = "Hit end of document while parsing a dpi node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
+        }
+
+        var token = tokens[tokenIndex];
+        IExpressionNode expr;
+        switch (token.Type)
+        {
+            case TokenType.Number:
+                expr = new StringValue
+                {
+                    Value = token
+                };
+                break;
+            case TokenType.EmbeddedExpression:
+                expr = new ExpressionValue
+                {
+                    Value = token
+                };
+                break;
+            default:
+                var (errorTokens, idx) = ConsumeUntilNextPageNode(tokens, tokenIndex);
+                return (new PageError
+                {
+                    ErroredTokens = errorTokens,
+                    Message =
+                        $"Found a dpi statement but got an ({token.Type}, '{token.Lexeme}') instead of a number or an embedded expression",
+                    Severity = DiagnosticSeverity.Error
+                }, idx);
+        }
+
+        return (new DpiNode
+        {
+            DpiToken = dpiToken,
+            Expression = expr
+        }, tokenIndex + 1);
+    }
+
+    private static (IPageNode, int) ParseMarginNode(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        // we have already verified this is a margin token
+        var marginToken = tokens[tokenIndex];
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        {
+            return (new PageError
+            {
+                ErroredTokens = new List<Token> { marginToken },
+                Message = "Hit end of document while parsing a margin node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
+        }
+
+        var marginTypeToken = tokens[tokenIndex];
+        switch (marginTypeToken.Type)
+        {
+            case TokenType.Left:
+            case TokenType.Right:
+            case TokenType.Up:
+            case TokenType.Down:
+            case TokenType.All:
+                break;
+            default:
+                var (errorTokens, idx) = ConsumeUntilNextPageNode(tokens, tokenIndex);
+                return (new PageError
+                {
+                    ErroredTokens = errorTokens,
+                    Message =
+                        $"Found a margin statement but got an ({marginTypeToken.Type}, '{marginTypeToken.Lexeme}') instead of left, right, up, down, or all",
+                    Severity = DiagnosticSeverity.Error
+                }, idx);
+        }
+
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        {
+            return (new PageError
+            {
+                ErroredTokens = new List<Token> {marginToken, marginTypeToken},
+                Message = "Hit end of document while parsing a margin node",
+                Severity = DiagnosticSeverity.Error
+            }, tokenIndex);
+        }
+        
+        var token = tokens[tokenIndex];
+        IExpressionNode expr;
+        switch (token.Type)
+        {
+            case TokenType.Number:
+                expr = new StringValue
+                {
+                    Value = token
+                };
+                break;
+            case TokenType.EmbeddedExpression:
+                expr = new ExpressionValue
+                {
+                    Value = token
+                };
+                break;
+            default:
+                var (errorTokens, idx) = ConsumeUntilNextPageNode(tokens, tokenIndex);
+                return (new PageError
+                {
+                    ErroredTokens = errorTokens,
+                    Message =
+                        $"Found a margin statement but got an ({token.Type}, '{token.Lexeme}') instead of a number or an embedded expression",
+                    Severity = DiagnosticSeverity.Error
+                }, idx);
+        }
+
+        return (new MarginNode
+        {
+            MarginToken = marginToken,
+            MarginTypeToken = marginTypeToken,
+            Expression = expr
+        }, tokenIndex + 1);
     }
 }
