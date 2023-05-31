@@ -6,9 +6,7 @@ import @{System.Collections.Generic}
 
 // only allowed at the top and always lifted since these will be member variables of the class
 variable @{Person Author}
-variable @{int test}
-variable @{IQueryable<BigData> DatabaseData}
-variable @{DbContext myDbContext}
+variable @{string Test}
 
 title 'Big Serious Report @{DateTime.UtcNow.ToString("MMMM yyyy")}'
 creationdate @{DateTime.UtcNow}
@@ -17,43 +15,21 @@ author "@{Author.FirstName} @{Author.LastName}"
 // only allowed on the top level and generates an xobject
 load font Helvetica
 
-// if only one font available then automatically use that when writing text
-load image Cat "../images/bmp/cat.bmp"
-
 page single
-    width 8.5 inch
-    height 11 inch
-    margin all 1 inch
-    body
-        text "This is a cover page"
-    end
-end
-
-page layout
-    dpi 100
-    width 8.5 inch
-    height 11 inch
-    margin left 1 inch
-    margin right 1 inch
-    margin up 1 inch
-    margin down 1 inch
+    width 8.5 //inch
+    height 11 //inch
+    margin all 1 //inch
     header
-        if @{pageNumber % 2 == 0} then
-            text "oh yeah @{pageNumber}"
-        else
-            // left justify is used by default
-            text "odd header"
-        end 
+        text "SUPER COOL"
     end
     body
-        text "have we gone too far"
-        image Cat
-        loop value in @{DatabaseData}
-           text @{value.PrimaryKey} @{value.CoolDataValue}  
-        end
+        //font size 12
+        
+        text "The goal of this message is to be a long message that should wrap. I would like to make it so you can write paragraphs as long as you want and the lines will automatically wrap. Perhaps that should be configurable with a command. It probably should be on by default as well. I think newlines and tabs should be ignored honestly."
+        
+        text "This would show as a wholy new paragraph! My test variable is @{Test}"
     end
     footer
-        text "this is my footer!"
+        text "good foot"
     end
 end
-

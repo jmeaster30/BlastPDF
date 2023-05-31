@@ -33,6 +33,8 @@ public static class BasicExporterExtension {
     }
 
     // document level resources
+    
+    
 
     crossReferences.Add((3, stream.Position));
     stream.Write($"3 0 obj\n".ToUTF8());
@@ -161,8 +163,6 @@ public static class BasicExporterExtension {
       //  nextStart = refs.ObjectNumberByteOffsets.Select(x => x.Item1).OrderBy(x => x).FirstOrDefault() + 1;
       //}
     }
-    
-    
 
     results.AddObjects(crossReferences);
 

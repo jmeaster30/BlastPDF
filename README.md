@@ -43,6 +43,10 @@ Has support for:
 - [ ] HXA
 - and many more once I think of them
 
+### BlastFont
+
+A font loading library
+
 ### BlastSharp
 
 Random utility things I wanted to have or try to make

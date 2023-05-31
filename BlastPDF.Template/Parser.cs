@@ -84,7 +84,7 @@ public class Parser
                 }
                 default:
                 {
-                    var (errorTokens, idx) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+                    var (errorTokens, idx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotDocumentNodeToken);
                     results.Add(new DocumentError
                     {
                         ErroredTokens = errorTokens,
@@ -107,15 +107,25 @@ public class Parser
         return results;
     }
 
-    private static bool IsDocumentNodeToken(TokenType type)
+    private static bool IsNotDocumentNodeToken(TokenType type)
     {
         return type is not (TokenType.Namespace or TokenType.Import or TokenType.Variable or TokenType.Title or TokenType.Author or TokenType.CreationDate or TokenType.Load or TokenType.Page);
     }
+    
+    private static bool IsNotPageNodeToken(TokenType type)
+    {
+        return type is not (TokenType.Width or TokenType.Height or TokenType.Margin or TokenType.Header or TokenType.Body or TokenType.Footer or TokenType.Dpi or TokenType.End);
+    }
+    
+    private static bool IsNotContentNodeToken(TokenType type)
+    {
+        return type is not TokenType.Text;
+    }
 
-    private static (List<Token>, int) ConsumeUntilNextDocumentNode(IReadOnlyList<Token> tokens, int tokenIndex)
+    private static (List<Token>, int) ConsumeUntilNextTokenType(IReadOnlyList<Token> tokens, int tokenIndex, Func<TokenType, bool> typePredicate)
     {
         var results = new List<Token>(); 
-        while (tokenIndex < tokens.Count && IsDocumentNodeToken(tokens[tokenIndex].Type))
+        while (tokenIndex < tokens.Count && typePredicate(tokens[tokenIndex].Type))
         {
             results.Add(tokens[tokenIndex]);
             tokenIndex += 1;
@@ -148,7 +158,7 @@ public class Parser
             }, tokenIndex + 1);
         }
 
-        var (errorTokens, finalIndex) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+        var (errorTokens, finalIndex) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotDocumentNodeToken);
         return (new DocumentError
         {
             ErroredTokens = errorTokens,
@@ -182,7 +192,7 @@ public class Parser
             }, tokenIndex + 1);
         }
 
-        var (errorTokens, finalIndex) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+        var (errorTokens, finalIndex) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotDocumentNodeToken);
         return (new DocumentError
         {
             ErroredTokens = errorTokens,
@@ -216,7 +226,7 @@ public class Parser
             }, tokenIndex + 1);
         }
 
-        var (errorTokens, finalIndex) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+        var (errorTokens, finalIndex) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotDocumentNodeToken);
         return (new DocumentError
         {
             ErroredTokens = errorTokens,
@@ -257,7 +267,7 @@ public class Parser
                 };
                 break;
             default:
-                var (erroredTokens, idx) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+                var (erroredTokens, idx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotDocumentNodeToken);
                 return (new DocumentError
                 {
                     ErroredTokens = erroredTokens,
@@ -306,7 +316,7 @@ public class Parser
                 };
                 break;
             default:
-                var (erroredTokens, idx) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+                var (erroredTokens, idx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotDocumentNodeToken);
                 return (new DocumentError
                 {
                     ErroredTokens = erroredTokens,
@@ -355,7 +365,7 @@ public class Parser
                 };
                 break;
             default:
-                var (erroredTokens, idx) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+                var (erroredTokens, idx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotDocumentNodeToken);
                 return (new DocumentError
                 {
                     ErroredTokens = erroredTokens,
@@ -394,7 +404,7 @@ public class Parser
             case TokenType.Image:
                 break;
             default:
-                var (erroredTokens, idx) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+                var (erroredTokens, idx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotDocumentNodeToken);
                 return (new DocumentError
                 {
                     ErroredTokens = erroredTokens,
@@ -418,7 +428,7 @@ public class Parser
         var identifierToken = tokens[tokenIndex];
         if (identifierToken.Type != TokenType.Identifier)
         {
-            var (erroredTokens, idx) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+            var (erroredTokens, idx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotDocumentNodeToken);
             return (new DocumentError
             {
                 ErroredTokens = erroredTokens,
@@ -491,7 +501,7 @@ public class Parser
             case TokenType.Layout:
                 break;
             default:
-                var (erroredTokens, idx) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+                var (erroredTokens, idx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotDocumentNodeToken);
                 return (new DocumentError
                 {
                     ErroredTokens = erroredTokens,
@@ -528,7 +538,7 @@ public class Parser
 
         if (tokens[tokenIndex].Type != TokenType.End)
         {
-            var (erroredTokens, idx) = ConsumeUntilNextDocumentNode(tokens, tokenIndex);
+            var (erroredTokens, idx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotDocumentNodeToken);
             return (new DocumentError
             {
                 ErroredTokens = erroredTokens,
@@ -545,21 +555,7 @@ public class Parser
         }, tokenIndex + 1);
     }
     
-    private static bool IsPageNodeToken(TokenType type)
-    {
-        return type is not (TokenType.Width or TokenType.Height or TokenType.Margin or TokenType.Header or TokenType.Body or TokenType.Footer or TokenType.Dpi or TokenType.End);
-    }
-
-    private static (List<Token>, int) ConsumeUntilNextPageNode(IReadOnlyList<Token> tokens, int tokenIndex)
-    {
-        var results = new List<Token>(); 
-        while (tokenIndex < tokens.Count && IsPageNodeToken(tokens[tokenIndex].Type))
-        {
-            results.Add(tokens[tokenIndex]);
-            tokenIndex += 1;
-        }
-        return (results, tokenIndex);
-    }
+    
 
     private static (IPageNode, int) ParsePageStatement(IReadOnlyList<Token> tokens, int tokenIndex)
     {
@@ -574,15 +570,15 @@ public class Parser
                 return ParseDpiNode(tokens, tokenIndex);
             case TokenType.Margin:
                 return ParseMarginNode(tokens, tokenIndex);
-            //case TokenType.Header:
-            //    return ParseHeaderNode(tokens, tokenIndex);
-            //case TokenType.Body:
-            //    return ParseBodyNode(tokens, tokenIndex);
-            //case TokenType.Footer:
-            //    return ParseFooterNode(tokens, tokenIndex);
+            case TokenType.Header:
+                return ParseHeaderNode(tokens, tokenIndex);
+            case TokenType.Body:
+                return ParseBodyNode(tokens, tokenIndex);
+            case TokenType.Footer:
+                return ParseFooterNode(tokens, tokenIndex);
             default:
             {
-                var (errorTokens, idx) = ConsumeUntilNextPageNode(tokens, tokenIndex);
+                var (errorTokens, idx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotPageNodeToken);
                 return (new PageError
                 {
                     ErroredTokens = errorTokens,
@@ -613,7 +609,7 @@ public class Parser
         switch (token.Type)
         {
             case TokenType.Number:
-                expr = new StringValue
+                expr = new NumberValue
                 {
                     Value = token
                 };
@@ -625,7 +621,7 @@ public class Parser
                 };
                 break;
             default:
-                var (errorTokens, idx) = ConsumeUntilNextPageNode(tokens, tokenIndex);
+                var (errorTokens, idx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotPageNodeToken);
                 return (new PageError
                 {
                     ErroredTokens = errorTokens,
@@ -662,7 +658,7 @@ public class Parser
         switch (token.Type)
         {
             case TokenType.Number:
-                expr = new StringValue
+                expr = new NumberValue
                 {
                     Value = token
                 };
@@ -674,7 +670,7 @@ public class Parser
                 };
                 break;
             default:
-                var (errorTokens, idx) = ConsumeUntilNextPageNode(tokens, tokenIndex);
+                var (errorTokens, idx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotPageNodeToken);
                 return (new PageError
                 {
                     ErroredTokens = errorTokens,
@@ -711,7 +707,7 @@ public class Parser
         switch (token.Type)
         {
             case TokenType.Number:
-                expr = new StringValue
+                expr = new NumberValue
                 {
                     Value = token
                 };
@@ -723,7 +719,7 @@ public class Parser
                 };
                 break;
             default:
-                var (errorTokens, idx) = ConsumeUntilNextPageNode(tokens, tokenIndex);
+                var (errorTokens, idx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotPageNodeToken);
                 return (new PageError
                 {
                     ErroredTokens = errorTokens,
@@ -765,7 +761,7 @@ public class Parser
             case TokenType.All:
                 break;
             default:
-                var (errorTokens, idx) = ConsumeUntilNextPageNode(tokens, tokenIndex);
+                var (errorTokens, idx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotPageNodeToken);
                 return (new PageError
                 {
                     ErroredTokens = errorTokens,
@@ -791,7 +787,7 @@ public class Parser
         switch (token.Type)
         {
             case TokenType.Number:
-                expr = new StringValue
+                expr = new NumberValue
                 {
                     Value = token
                 };
@@ -803,7 +799,7 @@ public class Parser
                 };
                 break;
             default:
-                var (errorTokens, idx) = ConsumeUntilNextPageNode(tokens, tokenIndex);
+                var (errorTokens, idx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotPageNodeToken);
                 return (new PageError
                 {
                     ErroredTokens = errorTokens,
@@ -817,6 +813,220 @@ public class Parser
         {
             MarginToken = marginToken,
             MarginTypeToken = marginTypeToken,
+            Expression = expr
+        }, tokenIndex + 1);
+    }
+
+    private static (IPageNode, int) ParseHeaderNode(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        var headerToken = tokens[tokenIndex];
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        {
+            return (new PageError
+            {
+                ErroredTokens = new List<Token> { headerToken },
+                Message = "Hit end of document while parsing a header node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
+        }
+
+        var (contents, idx) = ParseContentNodes(tokens, tokenIndex);
+        tokenIndex = idx;
+        if (tokenIndex >= tokens.Count)
+        {
+            return (new PageError
+            {
+                ErroredTokens = new List<Token> { headerToken },
+                Message = "Hit end of document while parsing a header node",
+                Severity = DiagnosticSeverity.Error
+            }, tokenIndex);
+        }
+
+        var endToken = tokens[tokenIndex];
+        if (endToken.Type == TokenType.End)
+        {
+            return (new PageError
+            {
+                ErroredTokens = new List<Token> { endToken },
+                Message = $"Unexpected token ({endToken.Type}, '{endToken.Lexeme}'). Expected end token",
+                Severity = DiagnosticSeverity.Error
+            }, tokenIndex);
+        }
+
+        return (new HeaderNode
+        {
+            HeaderToken = headerToken,
+            Contents = contents,
+            EndToken = endToken
+        }, tokenIndex + 1);
+    }
+    
+    private static (IPageNode, int) ParseBodyNode(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        var bodyToken = tokens[tokenIndex];
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        {
+            return (new PageError
+            {
+                ErroredTokens = new List<Token> { bodyToken },
+                Message = "Hit end of document while parsing a body node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
+        }
+
+        var (contents, idx) = ParseContentNodes(tokens, tokenIndex);
+        tokenIndex = idx;
+        if (tokenIndex >= tokens.Count)
+        {
+            return (new PageError
+            {
+                ErroredTokens = new List<Token> { bodyToken },
+                Message = "Hit end of document while parsing a body node",
+                Severity = DiagnosticSeverity.Error
+            }, tokenIndex);
+        }
+
+        var endToken = tokens[tokenIndex];
+        if (endToken.Type == TokenType.End)
+        {
+            return (new PageError
+            {
+                ErroredTokens = new List<Token> { endToken },
+                Message = $"Unexpected token ({endToken.Type}, '{endToken.Lexeme}'). Expected end token",
+                Severity = DiagnosticSeverity.Error
+            }, tokenIndex);
+        }
+
+        return (new BodyNode
+        {
+            BodyToken = bodyToken,
+            Contents = contents,
+            EndToken = endToken
+        }, tokenIndex + 1);
+    }
+
+    private static (IPageNode, int) ParseFooterNode(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        var footerToken = tokens[tokenIndex];
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        { 
+            return (new PageError
+            {
+                ErroredTokens = new List<Token> { footerToken },
+                Message = "Hit end of document while parsing a footer node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
+        }
+        
+        var (contents, idx) = ParseContentNodes(tokens, tokenIndex);
+        tokenIndex = idx;
+        if (tokenIndex >= tokens.Count)
+        { 
+            return (new PageError
+            { 
+                ErroredTokens = new List<Token> { footerToken },
+                Message = "Hit end of document while parsing a footer node",
+                Severity = DiagnosticSeverity.Error
+            }, tokenIndex);
+        }
+        
+        var endToken = tokens[tokenIndex];
+        if (endToken.Type == TokenType.End)
+        {
+            return (new PageError
+            {
+                ErroredTokens = new List<Token> { endToken },
+                Message = $"Unexpected token ({endToken.Type}, '{endToken.Lexeme}'). Expected end token",
+                Severity = DiagnosticSeverity.Error
+            }, tokenIndex);
+        }
+        
+        return (new FooterNode
+        {
+            FooterToken = footerToken,
+            Contents = contents,
+            EndToken = endToken
+        }, tokenIndex + 1);
+    }
+
+    private static (List<IContentNode>, int) ParseContentNodes(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        var headerContents = new List<IContentNode>();
+        while (tokenIndex < tokens.Count && tokens[tokenIndex].Type == TokenType.End)
+        {
+            var (node, idx) = tokens[tokenIndex].Type switch
+            {
+                TokenType.Text => ParseTextNode(tokens, tokenIndex),
+                _ => (null, -1),
+            };
+
+            if (idx == -1)
+            {
+                var (erroredTokens, realidx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotContentNodeToken);
+                headerContents.Add(new ContentError
+                {
+                    ErroredTokens = erroredTokens,
+                    Message = $"Unexpected token ({tokens[tokenIndex].Type}, '{tokens[tokenIndex].Lexeme}'). Expected a content type node",
+                    Severity = DiagnosticSeverity.Error
+                });
+                tokenIndex = realidx;
+                continue;
+            }
+            
+            headerContents.Add(node);
+            tokenIndex = idx;
+        }
+
+        return (headerContents, tokenIndex);
+    }
+
+    private static (IContentNode, int) ParseTextNode(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        var textToken = tokens[tokenIndex];
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        { 
+            return (new ContentError
+            {
+                ErroredTokens = new List<Token> { textToken },
+                Message = "Hit end of document while parsing a text node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
+        }
+        
+        var token = tokens[tokenIndex];
+        IExpressionNode expr;
+        switch (token.Type)
+        {
+            case TokenType.String:
+                expr = new StringValue
+                {
+                    Value = token
+                };
+                break;
+            case TokenType.EmbeddedExpression:
+                expr = new ExpressionValue
+                {
+                    Value = token
+                };
+                break;
+            default:
+                var (erroredTokens, idx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsNotContentNodeToken);
+                return (new ContentError
+                {
+                    ErroredTokens = erroredTokens,
+                    Message =
+                        $"Found a text statement but got an ({token.Type}, '{token.Lexeme}') instead of a string or an embedded expression",
+                    Severity = DiagnosticSeverity.Error
+                }, idx);
+        }
+
+        return (new TextNode
+        {
+            TextToken = textToken,
             Expression = expr
         }, tokenIndex + 1);
     }

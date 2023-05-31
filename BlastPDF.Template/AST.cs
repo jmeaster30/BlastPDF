@@ -5,7 +5,6 @@ namespace BlastPDF.Template;
 
 public interface IAstNode
 {
-    public string GenerateSource();
     public bool Is<T>();
     public IEnumerable<Diagnostic> GetErrors(string filepath);
 }
@@ -13,17 +12,13 @@ public interface IAstNode
 public interface IDocumentNode : IAstNode {}
 public interface IPageNode : IAstNode {}
 public interface IExpressionNode : IAstNode {}
+public interface IContentNode : IAstNode {}
 
 public class DocumentError : IDocumentNode
 {
     public List<Token> ErroredTokens { get; set; }
     public string Message { get; set; }
     public DiagnosticSeverity Severity { get; set; }
-
-    public string GenerateSource()
-    {
-        return "ERROR";
-    }
 
     public bool Is<T>()
     {
@@ -68,10 +63,6 @@ public class PageError : IPageNode
     public List<Token> ErroredTokens { get; set; }
     public string Message { get; set; }
     public DiagnosticSeverity Severity { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -116,10 +107,6 @@ public class ExpressionError : IExpressionNode
     public List<Token> ErroredTokens { get; set; }
     public string Message { get; set; }
     public DiagnosticSeverity Severity { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -159,14 +146,54 @@ public class ExpressionError : IExpressionNode
     }
 }
 
+public class ContentError : IContentNode
+{
+    public List<Token> ErroredTokens { get; set; }
+    public string Message { get; set; }
+    public DiagnosticSeverity Severity { get; set; }
+
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(ContentError);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        var start = ErroredTokens.FirstOrDefault();
+        var end = ErroredTokens.LastOrDefault();
+        
+        var textSpanStart = start?.Offset.Item1 ?? 0;
+        var textSpanEnd = end?.Offset.Item2 ?? 0;
+
+        var lineStart = start == null ? 0 : start.Line.Item1 - 1;
+        var lineEnd = end == null ? 0 : end.Line.Item2 - 1;
+        var columnStart = start == null ? 0 : start.Column.Item1 - 1;
+        var columnEnd = end == null ? 0 : end.Column.Item2 - 1;
+
+        return new List<Diagnostic>
+        {
+            Diagnostic.Create(
+                new DiagnosticDescriptor(
+                    "BLASTPDF",
+                    "BlastPDF Template Error",
+                    Message,
+                    "BlastPDF Template Error",
+                    Severity,
+                    true),
+                Location.Create(
+                    filepath,
+                    new TextSpan(textSpanStart, textSpanEnd - textSpanStart),
+                    new LinePositionSpan(
+                        new LinePosition(lineStart, columnStart),
+                        new LinePosition(lineEnd, columnEnd))))
+        };
+    }
+}
+
 public class NumberValue : IExpressionNode
 {
     public Token Value { get; set; }
     public Token Unit { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -182,10 +209,6 @@ public class NumberValue : IExpressionNode
 public class StringValue : IExpressionNode
 {
     public Token Value { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -201,10 +224,6 @@ public class StringValue : IExpressionNode
 public class ExpressionValue : IExpressionNode
 {
     public Token Value { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -221,10 +240,6 @@ public class NamespaceNode : IDocumentNode
 {
     public Token NamespaceToken { get; set; }
     public Token Value { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -241,10 +256,6 @@ public class ImportNode : IDocumentNode
 {
     public Token ImportToken { get; set; }
     public Token Value { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -261,10 +272,6 @@ public class VariableNode : IDocumentNode
 {
     public Token VariableToken { get; set; }
     public Token Value { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -281,10 +288,6 @@ public class TitleNode : IDocumentNode
 {
     public Token TitleToken { get; set; }
     public IExpressionNode Expression { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -301,10 +304,6 @@ public class CreationDateNode : IDocumentNode
 {
     public Token CreationDateToken { get; set; }
     public IExpressionNode Expression { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -321,10 +320,6 @@ public class AuthorNode : IDocumentNode
 {
     public Token AuthorToken { get; set; }
     public IExpressionNode Expression { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -343,10 +338,6 @@ public class LoadNode : IDocumentNode
     public Token TypeToken { get; set; }
     public Token IdentifierToken { get; set; }
     public IExpressionNode? Expression { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -365,11 +356,7 @@ public class AddPageNode : IDocumentNode
     public Token TypeToken { get; set; }
     public List<IPageNode> PageNodes { get; set; }
     public Token EndToken { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
-
+    
     public bool Is<T>()
     {
         return typeof(T) == typeof(AddPageNode);
@@ -385,10 +372,6 @@ public class WidthNode : IPageNode
 {
     public Token WidthToken { get; set; }
     public IExpressionNode Expression { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -405,10 +388,6 @@ public class HeightNode : IPageNode
 {
     public Token HeightToken { get; set; }
     public IExpressionNode Expression { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -426,10 +405,6 @@ public class MarginNode : IPageNode
     public Token MarginToken { get; set; }
     public Token MarginTypeToken { get; set; }
     public IExpressionNode Expression { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -446,10 +421,6 @@ public class DpiNode : IPageNode
 {
     public Token DpiToken { get; set; }
     public IExpressionNode Expression { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -465,12 +436,8 @@ public class DpiNode : IPageNode
 public class HeaderNode : IPageNode
 {
     public Token HeaderToken { get; set; }
+    public List<IContentNode> Contents { get; set; }
     public Token EndToken { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
-
     public bool Is<T>()
     {
         return typeof(T) == typeof(HeaderNode);
@@ -485,11 +452,8 @@ public class HeaderNode : IPageNode
 public class BodyNode : IPageNode
 {
     public Token BodyToken { get; set; }
+    public List<IContentNode> Contents { get; set; }
     public Token EndToken { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -505,11 +469,8 @@ public class BodyNode : IPageNode
 public class FooterNode : IPageNode
 {
     public Token FooterToken { get; set; }
+    public List<IContentNode> Contents { get; set; }
     public Token EndToken { get; set; }
-    public string GenerateSource()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Is<T>()
     {
@@ -521,6 +482,50 @@ public class FooterNode : IPageNode
         return new List<Diagnostic>();
     }
 }
+
+public class TextNode : IContentNode
+{
+    public Token TextToken { get; set; }
+    public IExpressionNode Expression { get; set; }
+
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(TextNode);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        return new List<Diagnostic>();
+    }
+}
+
+public class ImageNode : IContentNode
+{
+    public Token ImageToken { get; set; }
+    public IExpressionNode Width { get; set; }
+    public IExpressionNode Height { get; set; }
+    public Token Identifier { get; set; } 
+    
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(ImageNode);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        return new List<Diagnostic>();
+    }
+}
+
+/*public class BranchNode : IContentNode, IPageNode, IDocumentNode
+{
+    
+}
+
+public class LoopNode : IContentNode, IPageNode, IDocumentNode
+{
+    
+}*/
 
 public static class AstExtensions
 {
