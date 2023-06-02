@@ -8,7 +8,6 @@ using BlastPDF.Builder.Graphics.Drawing;
 using BlastPDF.Exporter.Basic;
 using BlastPDF.Filter;
 using BlastSharp.Dates;
-using Microsoft.VisualBasic;
 
 namespace ShowCase;
 

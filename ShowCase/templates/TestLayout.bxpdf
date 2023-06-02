@@ -18,13 +18,11 @@ load font Helvetica
 page single
     width 8.5 //inch
     height 11 //inch
-    margin all 1 //inch
+    margin all 1 
     header
         text "SUPER COOL"
     end
     body
-        //font size 12
-        
         text "The goal of this message is to be a long message that should wrap. I would like to make it so you can write paragraphs as long as you want and the lines will automatically wrap. Perhaps that should be configurable with a command. It probably should be on by default as well. I think newlines and tabs should be ignored honestly."
         
         text "This would show as a wholy new paragraph! My test variable is @{Test}"
