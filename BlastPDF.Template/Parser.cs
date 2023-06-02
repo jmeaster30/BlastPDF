@@ -958,19 +958,19 @@ public static class Parser
             var (node, idx) = tokens[tokenIndex].Type switch
             {
                 TokenType.Text => ParseTextNode(tokens, tokenIndex),
-                _ => (null, -1),
+                _ => (default!, -1)
             };
 
             if (idx == -1)
             {
-                var (erroredTokens, realidx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsContentNodeToken);
+                var (erroredTokens, realIdx) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsContentNodeToken);
                 headerContents.Add(new ContentError
                 {
                     ErroredTokens = erroredTokens,
                     Message = $"Unexpected token ({tokens[tokenIndex].Type}, '{tokens[tokenIndex].Lexeme}'). Expected a content type node",
                     Severity = DiagnosticSeverity.Error
                 });
-                tokenIndex = realidx;
+                tokenIndex = realIdx;
                 continue;
             }
             

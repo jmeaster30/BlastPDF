@@ -16,8 +16,8 @@ public interface IContentNode : IAstNode {}
 
 public class DocumentError : IDocumentNode
 {
-    public List<Token> ErroredTokens { get; set; }
-    public string Message { get; set; }
+    public List<Token> ErroredTokens { get; set; } = default!;
+    public string Message { get; set; } = default!;
     public DiagnosticSeverity Severity { get; set; }
 
     public bool Is<T>()
@@ -60,8 +60,8 @@ public class DocumentError : IDocumentNode
 
 public class PageError : IPageNode
 {
-    public List<Token> ErroredTokens { get; set; }
-    public string Message { get; set; }
+    public List<Token> ErroredTokens { get; set; } = default!;
+    public string Message { get; set; } = default!;
     public DiagnosticSeverity Severity { get; set; }
 
     public bool Is<T>()
@@ -104,9 +104,9 @@ public class PageError : IPageNode
 
 public class ExpressionError : IExpressionNode
 {
-    public List<Token> ErroredTokens { get; set; }
-    public string Message { get; set; }
-    public DiagnosticSeverity Severity { get; set; }
+    public List<Token> ErroredTokens { get; set; } = default!;
+    public string Message { get; set; } = default!;
+    public DiagnosticSeverity Severity { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -148,9 +148,9 @@ public class ExpressionError : IExpressionNode
 
 public class ContentError : IContentNode
 {
-    public List<Token> ErroredTokens { get; set; }
-    public string Message { get; set; }
-    public DiagnosticSeverity Severity { get; set; }
+    public List<Token> ErroredTokens { get; set; } = default!;
+    public string Message { get; set; } = default!;
+    public DiagnosticSeverity Severity { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -192,8 +192,8 @@ public class ContentError : IContentNode
 
 public class NumberValue : IExpressionNode
 {
-    public Token Value { get; set; }
-    public Token Unit { get; set; }
+    public Token Value { get; set; } = default!;
+    public Token Unit { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -208,7 +208,7 @@ public class NumberValue : IExpressionNode
 
 public class StringValue : IExpressionNode
 {
-    public Token Value { get; set; }
+    public Token Value { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -223,7 +223,7 @@ public class StringValue : IExpressionNode
 
 public class ExpressionValue : IExpressionNode
 {
-    public Token Value { get; set; }
+    public Token Value { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -238,8 +238,8 @@ public class ExpressionValue : IExpressionNode
 
 public class NamespaceNode : IDocumentNode
 {
-    public Token NamespaceToken { get; set; }
-    public Token Value { get; set; }
+    public Token NamespaceToken { get; set; } = default!;
+    public Token Value { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -254,8 +254,8 @@ public class NamespaceNode : IDocumentNode
 
 public class ImportNode : IDocumentNode
 {
-    public Token ImportToken { get; set; }
-    public Token Value { get; set; }
+    public Token ImportToken { get; set; } = default!;
+    public Token Value { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -270,8 +270,8 @@ public class ImportNode : IDocumentNode
 
 public class VariableNode : IDocumentNode
 {
-    public Token VariableToken { get; set; }
-    public Token Value { get; set; }
+    public Token VariableToken { get; set; } = default!;
+    public Token Value { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -286,8 +286,8 @@ public class VariableNode : IDocumentNode
 
 public class TitleNode : IDocumentNode
 {
-    public Token TitleToken { get; set; }
-    public IExpressionNode Expression { get; set; }
+    public Token TitleToken { get; set; } = default!;
+    public IExpressionNode Expression { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -302,8 +302,8 @@ public class TitleNode : IDocumentNode
 
 public class CreationDateNode : IDocumentNode
 {
-    public Token CreationDateToken { get; set; }
-    public IExpressionNode Expression { get; set; }
+    public Token CreationDateToken { get; set; } = default!;
+    public IExpressionNode Expression { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -318,8 +318,8 @@ public class CreationDateNode : IDocumentNode
 
 public class AuthorNode : IDocumentNode
 {
-    public Token AuthorToken { get; set; }
-    public IExpressionNode Expression { get; set; }
+    public Token AuthorToken { get; set; } = default!;
+    public IExpressionNode Expression { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -334,10 +334,10 @@ public class AuthorNode : IDocumentNode
 
 public class LoadNode : IDocumentNode
 {
-    public Token LoadToken { get; set; }
-    public Token TypeToken { get; set; }
-    public Token IdentifierToken { get; set; }
-    public IExpressionNode? Expression { get; set; }
+    public Token LoadToken { get; set; } = default!;
+    public Token TypeToken { get; set; } = default!;
+    public Token IdentifierToken { get; set; } = default!;
+    public IExpressionNode? Expression { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -352,10 +352,10 @@ public class LoadNode : IDocumentNode
 
 public class AddPageNode : IDocumentNode
 {
-    public Token PageToken { get; set; }
-    public Token TypeToken { get; set; }
-    public List<IPageNode> PageNodes { get; set; }
-    public Token EndToken { get; set; }
+    public Token PageToken { get; set; } = default!;
+    public Token TypeToken { get; set; } = default!;
+    public List<IPageNode> PageNodes { get; set; } = default!;
+    public Token EndToken { get; set; } = default!;
     
     public bool Is<T>()
     {
@@ -370,8 +370,8 @@ public class AddPageNode : IDocumentNode
 
 public class WidthNode : IPageNode
 {
-    public Token WidthToken { get; set; }
-    public IExpressionNode Expression { get; set; }
+    public Token WidthToken { get; set; } = default!;
+    public IExpressionNode Expression { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -386,8 +386,8 @@ public class WidthNode : IPageNode
 
 public class HeightNode : IPageNode
 {
-    public Token HeightToken { get; set; }
-    public IExpressionNode Expression { get; set; }
+    public Token HeightToken { get; set; } = default!;
+    public IExpressionNode Expression { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -402,9 +402,9 @@ public class HeightNode : IPageNode
 
 public class MarginNode : IPageNode
 {
-    public Token MarginToken { get; set; }
-    public Token MarginTypeToken { get; set; }
-    public IExpressionNode Expression { get; set; }
+    public Token MarginToken { get; set; } = default!;
+    public Token MarginTypeToken { get; set; } = default!;
+    public IExpressionNode Expression { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -419,8 +419,8 @@ public class MarginNode : IPageNode
 
 public class DpiNode : IPageNode
 {
-    public Token DpiToken { get; set; }
-    public IExpressionNode Expression { get; set; }
+    public Token DpiToken { get; set; } = default!;
+    public IExpressionNode Expression { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -435,9 +435,9 @@ public class DpiNode : IPageNode
 
 public class HeaderNode : IPageNode
 {
-    public Token HeaderToken { get; set; }
-    public List<IContentNode> Contents { get; set; }
-    public Token EndToken { get; set; }
+    public Token HeaderToken { get; set; } = default!;
+    public List<IContentNode> Contents { get; set; } = default!;
+    public Token EndToken { get; set; } = default!;
     public bool Is<T>()
     {
         return typeof(T) == typeof(HeaderNode);
@@ -451,9 +451,9 @@ public class HeaderNode : IPageNode
 
 public class BodyNode : IPageNode
 {
-    public Token BodyToken { get; set; }
-    public List<IContentNode> Contents { get; set; }
-    public Token EndToken { get; set; }
+    public Token BodyToken { get; set; } = default!;
+    public List<IContentNode> Contents { get; set; } = default!;
+    public Token EndToken { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -468,9 +468,9 @@ public class BodyNode : IPageNode
 
 public class FooterNode : IPageNode
 {
-    public Token FooterToken { get; set; }
-    public List<IContentNode> Contents { get; set; }
-    public Token EndToken { get; set; }
+    public Token FooterToken { get; set; } = default!;
+    public List<IContentNode> Contents { get; set; } = default!;
+    public Token EndToken { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -485,8 +485,8 @@ public class FooterNode : IPageNode
 
 public class TextNode : IContentNode
 {
-    public Token TextToken { get; set; }
-    public IExpressionNode Expression { get; set; }
+    public Token TextToken { get; set; } = default!;
+    public IExpressionNode Expression { get; set; } = default!;
 
     public bool Is<T>()
     {
@@ -501,10 +501,10 @@ public class TextNode : IContentNode
 
 public class ImageNode : IContentNode
 {
-    public Token ImageToken { get; set; }
-    public IExpressionNode Width { get; set; }
-    public IExpressionNode Height { get; set; }
-    public Token Identifier { get; set; } 
+    public Token ImageToken { get; set; } = default!;
+    public IExpressionNode Width { get; set; } = default!;
+    public IExpressionNode Height { get; set; } = default!;
+    public Token Identifier { get; set; }  = default!;
     
     public bool Is<T>()
     {
