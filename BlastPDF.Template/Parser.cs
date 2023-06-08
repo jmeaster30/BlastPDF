@@ -958,6 +958,7 @@ public static class Parser
             var (node, idx) = tokens[tokenIndex].Type switch
             {
                 TokenType.Text => ParseTextNode(tokens, tokenIndex),
+                TokenType.If => ParseIfContentStatement(tokens, tokenIndex),
                 _ => (default!, -1)
             };
 
@@ -1048,5 +1049,99 @@ public static class Parser
             TextToken = textToken,
             Expression = expr
         }, tokenIndex + 1);
+    }
+
+    private static (IContentNode, int) ParseIfContentStatement(IReadOnlyList<Token> tokens, int tokenIndex)
+    {
+        var ifToken = tokens[tokenIndex];
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        { 
+            return (new ContentError
+            {
+                ErroredTokens = new List<Token> { ifToken },
+                Message = "Hit end of document while parsing an if statement node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
+        }
+
+        var conditionToken = tokens[tokenIndex];
+        if (conditionToken.Type != TokenType.EmbeddedExpression)
+        {
+            var (errorTokens, nextIndex) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsContentNodeToken);
+            return (new ContentError
+            {
+                ErroredTokens = errorTokens,
+                Message = $"Expected an expression but got a ({conditionToken.Type}, '{conditionToken.Lexeme}').",
+                Severity = DiagnosticSeverity.Error,
+            }, nextIndex);
+        }
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        { 
+            return (new ContentError
+            {
+                ErroredTokens = new List<Token> { ifToken, conditionToken },
+                Message = "Hit end of document while parsing an if statement node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
+        }
+        
+        var thenToken = tokens[tokenIndex];
+        if (thenToken.Type != TokenType.Then)
+        {
+            var (errorTokens, nextIndex) = ConsumeUntilNextTokenType(tokens, tokenIndex, IsContentNodeToken);
+            return (new ContentError
+            {
+                ErroredTokens = errorTokens,
+                Message = $"Expected 'then' but got a ({thenToken.Type}, '{thenToken.Lexeme}').",
+                Severity = DiagnosticSeverity.Error,
+            }, nextIndex);
+        }
+        tokenIndex += 1;
+        if (tokenIndex >= tokens.Count)
+        { 
+            return (new ContentError
+            {
+                ErroredTokens = new List<Token> { ifToken, conditionToken, thenToken },
+                Message = "Hit end of document while parsing an if statement node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
+        }
+
+        var (contents, idx) = ParseContentNodes(tokens, tokenIndex);
+        tokenIndex = idx;
+        if (tokenIndex >= tokens.Count)
+        { 
+            return (new ContentError
+            {
+                ErroredTokens = new List<Token> { ifToken, conditionToken, thenToken },
+                Message = "Hit end of document while parsing an if statement node",
+                Severity = DiagnosticSeverity.Error,
+            }, tokenIndex);
+        }
+
+        var endToken = tokens[tokenIndex];
+        if (endToken.Type == TokenType.End)
+        {
+            return (new BranchContentNode
+            {
+                IfToken = ifToken,
+                Expression = new ExpressionValue
+                {
+                    Value = conditionToken
+                },
+                ThenToken = thenToken,
+                TrueContents = contents,
+                EndToken = endToken,
+            }, tokenIndex + 1);
+        }
+
+        return (new ContentError
+        {
+            ErroredTokens = new List<Token> { endToken },
+            Message = "AAAAAAAAAAAAAAAAA",
+            Severity = DiagnosticSeverity.Error,
+        }, tokenIndex);
     }
 }

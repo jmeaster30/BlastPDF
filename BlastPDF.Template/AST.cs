@@ -445,7 +445,7 @@ public class HeaderNode : IPageNode
 
     public IEnumerable<Diagnostic> GetErrors(string filepath)
     {
-        return new List<Diagnostic>();
+        return Contents.GetErrors(filepath);
     }
 }
 
@@ -462,7 +462,7 @@ public class BodyNode : IPageNode
 
     public IEnumerable<Diagnostic> GetErrors(string filepath)
     {
-        return new List<Diagnostic>();
+        return Contents.GetErrors(filepath);
     }
 }
 
@@ -479,7 +479,7 @@ public class FooterNode : IPageNode
 
     public IEnumerable<Diagnostic> GetErrors(string filepath)
     {
-        return new List<Diagnostic>();
+        return Contents.GetErrors(filepath);
     }
 }
 
@@ -517,15 +517,46 @@ public class ImageNode : IContentNode
     }
 }
 
-/*public class BranchNode : IContentNode, IPageNode, IDocumentNode
+public class BranchContentNode : IContentNode
 {
-    
+    public Token IfToken { get; set; } = default!;
+    public IExpressionNode Expression { get; set; } = default!;
+    public Token ThenToken { get; set; } = default!;
+    public List<IContentNode> TrueContents { get; set; } = default!;
+    public Token? ElseToken { get; set; } = default!;
+    public List<IContentNode> FalseContents { get; set; } = default!;
+    public Token EndToken { get; set; } = default!;
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(BranchContentNode);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        return Expression.GetErrors(filepath).Concat(TrueContents.GetErrors(filepath))
+            .Concat(FalseContents.GetErrors(filepath));
+    }
 }
 
-public class LoopNode : IContentNode, IPageNode, IDocumentNode
+public class LoopContentNode : IContentNode
 {
-    
-}*/
+    public Token LoopToken { get; set; } = default!;
+    public Token? Identifier { get; set; } = default!;
+    public Token? InToken { get; set; } = default!;
+    public IExpressionNode Expression { get; set; } = default!;
+    public Token ThenToken { get; set; } = default!;
+    public List<IContentNode> Body { get; set; } = default!;
+    public Token EndToken { get; set; } = default!;
+    public bool Is<T>()
+    {
+        return typeof(T) == typeof(LoopContentNode);
+    }
+
+    public IEnumerable<Diagnostic> GetErrors(string filepath)
+    {
+        return Expression.GetErrors(filepath).Concat(Body.GetErrors(filepath));
+    }
+}
 
 public static class AstExtensions
 {
