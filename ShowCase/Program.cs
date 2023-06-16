@@ -6,13 +6,14 @@ using System.Text;
 using BlastPDF.Builder;
 using BlastPDF.Filter;
 using BlastSharp.Lists;
+using BlastType;
 
 namespace ShowCase;
 
 public class Program {
   public static void Main(string[] args)
   {
-    PdfBuilderExample.Run("test.pdf");
+    //PdfBuilderExample.Run("test.pdf");
     //ImageParsingExample.Run("../../../images/qoi/dice.qoi");
     //ImageParsingExample.Run("../../../images/qoi/kodim10.qoi");
     //ImageParsingExample.Run("../../../images/qoi/kodim23.qoi");
@@ -20,6 +21,8 @@ public class Program {
     //ImageParsingExample.Run("../../../images/qoi/testcard.qoi");
     //ImageParsingExample.Run("../../../images/qoi/testcard_rgba.qoi");
     //ImageParsingExample.Run("../../../images/qoi/wikipedia_008.qoi");
+
+    BlastFont.Load("../../../../Samples/airtraveler.otf");
   }
 }
 

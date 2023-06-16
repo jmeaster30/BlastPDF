@@ -104,21 +104,21 @@ public class PdfBuilderExample
                     .InlineImage("../../../images/bmp/cat.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.AsciiHex, PdfFilter.Lzw}))
                 ).Save(fs);
 
-        if (File.Exists("template_test.pdf")) {
-            File.Delete("template_test.pdf");
-        }
+        //if (File.Exists("template_test.pdf")) {
+        //    File.Delete("template_test.pdf");
+        //}
         
-        using var templateFile = File.Create("template_test.pdf");
+        //using var templateFile = File.Create("template_test.pdf");
         
-        var template = new TestLayout {
-            Author = new Person
-            {
-                FirstName = "John",
-                LastName = "Easterday"
-            }
-        };
+        //var template = new TestLayout {
+        //    Author = new Person
+        //    {
+        //        FirstName = "John",
+        //        LastName = "Easterday"
+        //    }
+        //};
         
-        template.Save(templateFile);
+        //template.Save(templateFile);
 
         var date = DateTime.Now.Year(1998).June().Day(30);
         Console.WriteLine(date.ToLocalTime().ToLongTimeString());
