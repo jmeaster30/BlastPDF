@@ -78,3 +78,10 @@ public class BitList : IEnumerable
             }).ToArray();
     }
 }
+
+public static class BitListExtensions {
+    public static BitList ToBitList(this IEnumerable<byte> contents)
+    {
+        return new BitList(contents);
+    }
+}
