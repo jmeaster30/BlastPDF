@@ -10,6 +10,8 @@ public class Fixed
     public int IntegerPart { get; set; }
     public int FractionalPart { get; set; }
 
+    public decimal Value => ToDecimal();
+
     public static Fixed FromBytes(int integerSize, int fractionalSize, byte[] bytes)
     {
         var bitList = bytes.ToBitList();
@@ -42,10 +44,5 @@ public class Fixed
     public decimal ToDecimal()
     {
         return IntegerPart + FractionalPart / (decimal)(1 << FractionalSize);
-    }
-
-    public float ToFloat()
-    {
-        return IntegerPart + FractionalPart / (float)(1 << FractionalSize);
     }
 }

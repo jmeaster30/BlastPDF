@@ -74,6 +74,7 @@ public class BlastFont
             {
                 "head" => FontHeader.Load(fontFile),
                 "hhea" => HorizontalHeader.Load(fontFile),
+                "maxp" => MaximumProfile.Load(fontFile),
                 _ => null
             };
 
