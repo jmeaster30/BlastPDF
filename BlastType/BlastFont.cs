@@ -69,18 +69,24 @@ public class BlastFont
 
             fontFile.Seek(record.Offset, SeekOrigin.Begin);
             
-            var table = record.TableTagString switch
+            // TODO table should be non-nullable if we can process all table tags
+            IFontTable? table = record.TableTagString switch
             {
                 "head" => FontHeader.Load(fontFile),
+                "hhea" => HorizontalHeader.Load(fontFile),
                 _ => null
             };
 
-            if (table != null)
-            {
-                Console.WriteLine("TABLE::");
-                Console.WriteLine(table.ToString());
-                blastFont.Tables.Add(table);
+            if (table == null)
+            { 
+                fontFile.Seek(record.Offset, SeekOrigin.Begin);
+                var bytes = fontFile.ReadBytes((int)Math.Min(10, record.Length));
+                Console.WriteLine(string.Join(' ', bytes.Select(x => x.ToString("X2"))));
+                continue;
             }
+            Console.WriteLine("TABLE::");
+            Console.WriteLine(table.ToString());
+            blastFont.Tables.Add(table);
         }
 
         return blastFont;
