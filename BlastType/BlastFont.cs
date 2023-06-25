@@ -59,7 +59,8 @@ public class BlastFont
         }
 
         Console.WriteLine($"NUMBER OF TABLE RECORDS: {blastFont.TableRecords.Count}");
-        foreach (var record in blastFont.TableRecords)
+        // some tables require data in other tables so we order by the offset
+        foreach (var record in blastFont.TableRecords.OrderBy(x => x.Offset))
         {
             Console.WriteLine("-----------");
             Console.WriteLine($"TableTag {Encoding.UTF8.GetString(record.TableTag, 0, record.TableTag.Length)}");
@@ -72,8 +73,10 @@ public class BlastFont
             // TODO table should be non-nullable if we can process all table tags
             IFontTable? table = record.TableTagString switch
             {
+                "DSIG" => DigitalSignature.Load(fontFile),
                 "head" => FontHeader.Load(fontFile),
                 "hhea" => HorizontalHeader.Load(fontFile),
+                "hmtx" => HorizontalMetrics.Load(fontFile, blastFont.Tables),
                 "maxp" => MaximumProfile.Load(fontFile),
                 _ => null
             };

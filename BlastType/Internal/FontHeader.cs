@@ -30,7 +30,7 @@ public class FontHeader : IFontTable
         return typeof(T) == typeof(FontHeader);
     }
 
-    public new string ToString()
+    public new string? ToString()
     {
         return JsonSerializer.Serialize(this);
     }

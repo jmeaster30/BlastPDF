@@ -22,14 +22,14 @@ public class HorizontalHeader : IFontTable
     public short Reserved3 { get; set; }
     public short Reserved4 { get; set; }
     public short MetricDataFormat { get; set; }
-    public ushort NumberOfHMetrics { get; set; }
+    public ushort NumberOfHorizontalMetrics { get; set; }
 
     public bool Is<T>()
     {
         return typeof(T) == typeof(HorizontalHeader);
     }
 
-    public new string ToString()
+    public new string? ToString()
     {
         return JsonSerializer.Serialize(this);
     }
@@ -55,7 +55,7 @@ public class HorizontalHeader : IFontTable
             Reserved3 = stream.ReadS16(),
             Reserved4 = stream.ReadS16(),
             MetricDataFormat = stream.ReadS16(),
-            NumberOfHMetrics = stream.ReadU16(),
+            NumberOfHorizontalMetrics = stream.ReadU16(),
         };
     }
 }

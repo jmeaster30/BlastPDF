@@ -30,7 +30,7 @@ public class MaximumProfile : IFontTable
         return typeof(T) == typeof(MaximumProfile);
     }
 
-    public new string ToString()
+    public new string? ToString()
     {
         return JsonSerializer.Serialize(this);
     }
