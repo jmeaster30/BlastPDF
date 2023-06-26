@@ -78,6 +78,7 @@ public class BlastFont
                 "hhea" => HorizontalHeader.Load(fontFile),
                 "hmtx" => HorizontalMetrics.Load(fontFile, blastFont.Tables),
                 "maxp" => MaximumProfile.Load(fontFile),
+                "name" => NameTable.Load(fontFile),
                 "OS/2" => Os2.Load(fontFile),
                 _ => null
             };
