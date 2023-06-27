@@ -10,8 +10,8 @@ public class BlastFont
     public ushort SearchRange { get; set; }
     public ushort EntrySelector { get; set; }
     public ushort RangeShift { get; set; }
-    public List<TableRecord> TableRecords { get; set; }
-    public List<IFontTable> Tables { get; set; }
+    public List<TableRecord> TableRecords { get; set; } = new();
+    public List<IFontTable> Tables { get; set; } = new();
 
     public static BlastFont Load(string fontFilename)
     {
@@ -49,8 +49,6 @@ public class BlastFont
             SearchRange = fontFile.ReadU16(),
             EntrySelector = fontFile.ReadU16(),
             RangeShift = fontFile.ReadU16(),
-            TableRecords = new(),
-            Tables = new(),
         };
 
         for (int i = 0; i < blastFont.NumberOfTables; i++)
@@ -81,6 +79,7 @@ public class BlastFont
                 "maxp" => MaximumProfile.Load(fontFile),
                 "name" => NameTable.Load(fontFile),
                 "OS/2" => Os2.Load(fontFile),
+                "post" => PostTable.Load(fontFile),
                 _ => null
             };
 
