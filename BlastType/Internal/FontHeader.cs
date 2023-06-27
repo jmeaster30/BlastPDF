@@ -1,6 +1,6 @@
-using System.Text.Json;
 using BlastSharp.Streams;
 using BlastType.Internal.DataTypes;
+using Newtonsoft.Json;
 
 namespace BlastType.Internal;
 
@@ -32,7 +32,7 @@ public class FontHeader : IFontTable
 
     public new string? ToString()
     {
-        return JsonSerializer.Serialize(this);
+        return JsonConvert.SerializeObject(this);
     }
     
     public static FontHeader Load(Stream stream)

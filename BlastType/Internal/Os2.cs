@@ -1,5 +1,5 @@
-using System.Text.Json;
 using BlastSharp.Streams;
+using Newtonsoft.Json;
 
 namespace BlastType.Internal;
 
@@ -174,6 +174,6 @@ public class Os2 : IFontTable
 
     public new string? ToString()
     {
-        return JsonSerializer.Serialize(this);
+        return JsonConvert.SerializeObject(this);
     }
 }

@@ -1,5 +1,5 @@
-using System.Text.Json;
 using BlastSharp.Streams;
+using Newtonsoft.Json;
 
 namespace BlastType.Internal;
 
@@ -44,8 +44,8 @@ public class NameTable : IFontTable
         return typeof(T) == typeof(NameTable);
     }
 
-    public string? ToString()
+    public new string? ToString()
     {
-        return JsonSerializer.Serialize(this);
+        return JsonConvert.SerializeObject(this);
     }
 }
