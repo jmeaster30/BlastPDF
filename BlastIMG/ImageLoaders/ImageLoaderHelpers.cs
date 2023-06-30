@@ -32,6 +32,19 @@ public static class ImageLoaderHelpers
 
         return result;
     }
+    
+    public static ushort ToU16(this byte[] bytes)
+    {
+        if (bytes.Length > 2) throw new ArgumentException("Too many bytes :( I only wanted 2 or less", nameof(bytes));
+        ushort result = 0;
+        foreach (var b in bytes)
+        {
+            result *= 256;
+            result += b;
+        }
+
+        return result;
+    }
 
     public static byte ByteSum(this byte lhs, int rhs)
     {

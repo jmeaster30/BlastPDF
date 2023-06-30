@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,6 +20,7 @@ public class Program {
     //ImageParsingExample.Run("../../../images/qoi/testcard.qoi");
     //ImageParsingExample.Run("../../../images/qoi/testcard_rgba.qoi");
     //ImageParsingExample.Run("../../../images/qoi/wikipedia_008.qoi");
+    //ImageParsingExample.Run("../../../images/gif/bird.gif");
 
     BlastFont.Load("../../../../Samples/airtraveler.otf");
   }

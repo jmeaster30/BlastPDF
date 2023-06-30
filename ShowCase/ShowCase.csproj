@@ -9,10 +9,6 @@
     <ProjectReference Include="..\BlastPDF.Template\BlastPDF.Template.csproj" OutputItemType="Analyzer" />
     <ProjectReference Include="..\BlastPDF\BlastPDF.csproj" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <!--<AdditionalFiles Include="templates/TestLayout.bxpdf" />-->
-  </ItemGroup>
 
   <PropertyGroup>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
