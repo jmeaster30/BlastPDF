@@ -1,7 +1,7 @@
 using BlastSharp.Streams;
 using Newtonsoft.Json;
 
-namespace BlastType.Internal;
+namespace BlastType.Internal.CharacterMapSubtables;
 
 // cmap format 0
 public class ByteEncodingTable : ICharacterMapSubtable

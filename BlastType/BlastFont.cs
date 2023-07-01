@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using BlastSharp.Streams;
 using BlastType.Internal;
+using BlastType.Internal.GlyphDefinitionSubtables;
 
 namespace BlastType;
 
@@ -61,7 +62,7 @@ public class BlastFont
         foreach (var record in blastFont.TableRecords.OrderBy(x => x.Offset))
         {
             Console.WriteLine("-----------");
-            Console.WriteLine($"TableTag {Encoding.UTF8.GetString(record.TableTag, 0, record.TableTag.Length)}");
+            Console.WriteLine($"TableTag '{Encoding.UTF8.GetString(record.TableTag, 0, record.TableTag.Length)}'");
             Console.WriteLine($"Checksum {record.Checksum}");
             Console.WriteLine($"Offset {record.Offset}");
             Console.WriteLine($"Length {record.Length}");
@@ -71,8 +72,11 @@ public class BlastFont
             // TODO table should be non-nullable if we can process all table tags
             IFontTable? table = record.TableTagString switch
             {
+                //"CFF " => 
                 "cmap" => CharacterMapTable.Load(fontFile),
                 "DSIG" => DigitalSignature.Load(fontFile),
+                "GDEF" => GlyphDefinitionTable.Load(fontFile),
+                "GPOS" => GlyphPositioningTable.Load(fontFile),
                 "head" => FontHeader.Load(fontFile),
                 "hhea" => HorizontalHeader.Load(fontFile),
                 "hmtx" => HorizontalMetrics.Load(fontFile, blastFont.Tables),

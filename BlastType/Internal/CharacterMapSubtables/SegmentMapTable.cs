@@ -1,7 +1,7 @@
 using BlastSharp.Streams;
 using Newtonsoft.Json;
 
-namespace BlastType.Internal;
+namespace BlastType.Internal.CharacterMapSubtables;
 
 // cmap subtable format 4
 public class SegmentMapTable : ICharacterMapSubtable

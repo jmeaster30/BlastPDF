@@ -1,8 +1,9 @@
 using BlastSharp.Streams;
 using Newtonsoft.Json;
 
-namespace BlastType.Internal;
+namespace BlastType.Internal.CharacterMapSubtables;
 
+// cmap format 6
 public class TrimmedMappingTable : ICharacterMapSubtable
 {
     public ushort Format { get; set; }

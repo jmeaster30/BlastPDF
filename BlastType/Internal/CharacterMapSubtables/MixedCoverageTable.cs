@@ -1,7 +1,7 @@
 using BlastSharp.Streams;
 using Newtonsoft.Json;
 
-namespace BlastType.Internal;
+namespace BlastType.Internal.CharacterMapSubtables;
 
 // cmap subtable format 8
 public class MixedCoverageTable : ICharacterMapSubtable

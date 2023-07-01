@@ -1,5 +1,5 @@
-using System.Text.Json;
 using BlastSharp.Streams;
+using BlastType.Internal.CharacterMapSubtables;
 
 namespace BlastType.Internal;
 

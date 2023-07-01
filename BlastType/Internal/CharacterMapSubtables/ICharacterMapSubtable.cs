@@ -1,6 +1,6 @@
 using BlastSharp.Streams;
 
-namespace BlastType.Internal;
+namespace BlastType.Internal.CharacterMapSubtables;
 
 public interface ICharacterMapSubtable
 {
@@ -22,7 +22,10 @@ public interface ICharacterMapSubtable
             4 => SegmentMapTable.Load(stream),
             6 => TrimmedMappingTable.Load(stream),
             8 => MixedCoverageTable.Load(stream),
-            _ => null // REMOVE
+            10 => TrimmedArrayTable.Load(stream),
+            12 => SegmentedCoverageTable.Load(stream),
+            13 => ManyToOneRangeMappingTable.Load(stream),
+            14 => UnicodeVariationSequencesTable.Load(stream)
         };
     }
 }

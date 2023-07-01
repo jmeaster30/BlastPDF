@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace BlastType.Internal;
+namespace BlastType.Internal.CharacterMapSubtables;
 
 // cmap format 2
 public class HighByteMappingTable : ICharacterMapSubtable
