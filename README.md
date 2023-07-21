@@ -10,8 +10,9 @@ With all my projects I try to challenge myself and learn as much as I can.
 The following are those goals:
 - Be able to generate any PDF I can imagine
   - I really want to create a copy of that one super cool DnD character sheet PDF that walks you through setting up a new character
-- Have zero dependencies. I have been not been relying on any external library other than the Microsoft CodeAnalysis library and NewtonSoft (which is actually only used for debugging purposes so this one barely counts)
-  - This is where BlastIMG came from where I needed some image loaders. 
+- Have zero dependencies
+  - I am allowed to use only Microsoft.CodeAnalysis for the code generators and Newtonsoft.JSON for debugging purposes.
+  - I am also allowed to use any external dependency where I am the primary author. (i.e. SharperImage fka BlastIMG)
 - Develop a templating language that uses code generators so the templates are type checked at compile time instead of runtime
 - Create a PDF viewer / editor ALA Adobe Acrobat utilizing BlastPDF as the backend (I will allow myself to use external libraries for drawing stuff to the screen)
 - Learn more about C#
@@ -28,20 +29,6 @@ Template language and source generators for compile-time generated pdf templates
 ### BlastPDF.Test
 
 Unit tests for the BlastPDF library
-
-### BlastIMG
-
-An image decoding library
-
-Has support for:
-- [ ] PNG
-- [ ] JPEG
-- [ ] WEBP
-- [X] BMP
-- [ ] GIF
-- [X] QOI
-- [ ] HXA
-- and many more once I think of them
 
 ### BlastFont
 

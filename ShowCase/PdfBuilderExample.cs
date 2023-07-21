@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using BlastIMG;
 using BlastPDF.Builder;
 using BlastPDF.Builder.Graphics;
 using BlastPDF.Builder.Graphics.Drawing;
 using BlastPDF.Exporter.Basic;
 using BlastPDF.Filter;
 using BlastSharp.Dates;
+using SharperImage.Formats;
 
 namespace ShowCase;
 

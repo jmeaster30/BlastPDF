@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BlastIMG;
 using BlastPDF.Exporter.Util;
 using BlastPDF.Builder;
 using BlastPDF.Builder.Graphics;
 using BlastPDF.Builder.Graphics.Drawing;
 using BlastPDF.Filter;
 using BlastSharp.Lists;
+using SharperImage.Enumerators;
 
 namespace BlastPDF.Exporter.Basic;
 
@@ -294,12 +294,26 @@ public static class BasicExporterExtension {
     stream.Write($"\t/F [{filterNames}]\n".ToUTF8());
     stream.Write("ID\n".ToUTF8());
 
-    IEnumerable<byte> imageData = image.ImageData.GetColorArray(image.ColorSpace switch
+    var imageData = image.ImageData.ToRowRankPixelEnumerable().SelectMany(p =>
     {
-      PdfColorSpace.DeviceGray => ColorFormat.GRAY,
-      PdfColorSpace.DeviceRGB => ColorFormat.RGB,
-      PdfColorSpace.DeviceCMYK => ColorFormat.CMYK,
-      _ => throw new NotImplementedException(),
+      switch (image.ColorSpace)
+      {
+        case PdfColorSpace.DeviceGray:
+          return new[] { (byte)(0.299 * p.Red + 0.587 * p.Green + 0.114 * p.Blue) };
+        case PdfColorSpace.DeviceRGB:
+          return new[] { p.Red, p.Green, p.Blue };
+        case PdfColorSpace.DeviceCMYK:
+          var rPrime = p.Red / 255.0;
+          var gPrime = p.Green / 255.0;
+          var bPrime = p.Blue / 255.0;
+          var k = 1 - Math.Max(rPrime, Math.Max(gPrime, bPrime));
+          var c = (1 - rPrime - k) / (1 - k);
+          var m = (1 - gPrime - k) / (1 - k);
+          var y = (1 - bPrime - k) / (1 - k);
+          return new[] { (byte)(c * 255), (byte)(m * 255), (byte)(y * 255), (byte)(k * 255) };
+        default:
+          throw new NotImplementedException();
+      }
     });
 
     imageData = image.Filters.Reverse().Aggregate(imageData, (current, filter) => filter.Encode(current));

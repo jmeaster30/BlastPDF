@@ -5,7 +5,8 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\BlastIMG\BlastIMG.csproj" />
+    <PackageReference Include="Syrency.SharperImage" Version="1.0.1-alpha" />
+    
     <ProjectReference Include="..\BlastSharp\BlastSharp.csproj" />
   </ItemGroup>
   
