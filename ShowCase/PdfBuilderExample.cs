@@ -4,6 +4,7 @@ using System.IO;
 using BlastPDF.Builder;
 using BlastPDF.Builder.Graphics;
 using BlastPDF.Builder.Graphics.Drawing;
+using BlastPDF.Builder.Resources;
 using BlastPDF.Exporter.Basic;
 using BlastPDF.Filter;
 using BlastSharp.Dates;
@@ -38,13 +39,16 @@ public class PdfBuilderExample
                 .DotsPerInch(100)
                 .Width(10)
                 .Height(10)
+                .UseHelvetica()
+                .UseCourierBold()
+                .UseTimesNewRomanItalic()
                 //.AddGraphics(PdfGraphicsObject.Create()
                 //    .SetCMYK(0.0M, 0.0M, 1.0M, 0.0M)
                 //    .Rect(0, 0, 1000, 1000)
                 //    .Paint(PaintModeEnum.CloseFillStroke))
                 .AddGraphics(PdfTextObject.Create()
                     .TextLeading(12)
-                    .SetFont("F1", 24)
+                    .SetFont("Helvetica", 24)
                     .NextLineOffset(100, 100)
                     .ShowText("have we gone too far")
                     .NextLineOffset(156, -6)
@@ -57,6 +61,7 @@ public class PdfBuilderExample
                     .ShowText("too far")
                     .NextLineOffset(0, -6)
                     .ShowText("too far")
+                    .SetFont("CourierBold", 24)
                     .NextLineOffset(0, -6)
                     .ShowText("too far")
                     .NextLineOffset(0, -6)
@@ -65,6 +70,7 @@ public class PdfBuilderExample
                     .ShowText("too far")
                     .NextLineOffset(0, -6)
                     .ShowText("too far")
+                    .SetFont("TimesNewRomanItalic", 24)
                     .NextLineOffset(0, -6)
                     .ShowText("too far")
                     .NextLineOffset(0, -6)

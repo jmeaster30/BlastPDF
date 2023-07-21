@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BlastPDF.Builder.Graphics;
+using BlastPDF.Builder.Resources;
 
 namespace BlastPDF.Builder;
 
@@ -16,10 +17,10 @@ public class PdfPage {
 
   public List<PdfGraphicsObject> Objects { get; } = new();
   public Dictionary<string, PdfObject> Resources { get; } = new();
+  public Dictionary<string, PdfFontResource> Fonts { get; } = new();
 
   public static PdfPage Create() { return new PdfPage(); }
 
-  // TODO move this to the document level so we can more easily share resources
   public PdfPage AddResource(string resourceName, PdfObject pdfObject) {
     if (string.IsNullOrEmpty(resourceName)) throw new ArgumentNullException("resourceName");
     if (Resources.ContainsKey(resourceName)) throw new ArgumentException($"Resource '{resourceName}' already exists as a resource for this page :(");

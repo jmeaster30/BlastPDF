@@ -6,6 +6,7 @@ using BlastPDF.Exporter.Util;
 using BlastPDF.Builder;
 using BlastPDF.Builder.Graphics;
 using BlastPDF.Builder.Graphics.Drawing;
+using BlastPDF.Builder.Resources;
 using BlastPDF.Filter;
 using BlastSharp.Lists;
 using SharperImage.Enumerators;
@@ -33,7 +34,6 @@ public static class BasicExporterExtension {
     }
 
     // document level resources
-    
     
 
     crossReferences.Add((3, stream.Position));
@@ -97,18 +97,15 @@ public static class BasicExporterExtension {
     var nextStart = objectNumber;
     
     // TODO Must allow more than one font
-    crossReferences.Add((nextStart, stream.Position));
-    stream.Write($"{nextStart} 0 obj\n".ToUTF8());
-    stream.Write("<<\n".ToUTF8());
-    stream.Write("/Type /Font\n".ToUTF8());
-    stream.Write("/SubType /Type\n".ToUTF8());
-    stream.Write("/Name /Default\n".ToUTF8());
-    stream.Write("/BaseFont /Helvetica\n".ToUTF8());
-    stream.Write("/Encoding /WinAnsiEncoding\n".ToUTF8());
-    stream.Write(">>\nendobj\n".ToUTF8());
-    var fontResourceStart = nextStart;
-    nextStart += 1;
-    
+    List<(string, int)> fontObjects = new();
+    foreach (var font in page.Fonts)
+    {
+      crossReferences.Add((nextStart, stream.Position));
+      fontObjects.Add((font.Key, nextStart));
+      font.Value.Export(stream, nextStart);
+      nextStart += 1;
+    }
+
     // export the page resources
     List<(string, int)> x_objects = new();
     foreach (var res in page.Resources)
@@ -130,7 +127,10 @@ public static class BasicExporterExtension {
     // Font's will be in a different sub dictionary in this resource section
     stream.Write(">>\n".ToUTF8());
     stream.Write("/Font <<\n".ToUTF8());
-    stream.Write($"/F1 {fontResourceStart} 0 R\n".ToUTF8()); // TODO Must allow more than one font
+    foreach (var fobj in fontObjects)
+    {
+      stream.Write($"/{fobj.Item1} {fobj.Item2} 0 R\n".ToUTF8());
+    }
     stream.Write(">>\n".ToUTF8());
     stream.Write(">>\nendobj\n".ToUTF8());
 
@@ -192,6 +192,32 @@ public static class BasicExporterExtension {
       PdfGraphicsObject graphics => graphics.Export(stream, objectNumber),
       _ => throw new Exception("Unhandled subtype of PdfObject")
     };
+  }
+
+  private static PdfExporterResults Export(this PdfFontResource pdfFontResource, Stream stream, int objectNumber)
+  {
+    return pdfFontResource switch
+    {
+      PdfFontType1 type1Font => type1Font.Export(stream, objectNumber),
+      _ => throw new Exception("Unhandled subtype of PdfFontResource")
+    };
+  }
+
+  private static PdfExporterResults Export(this PdfFontType1 pdfFontType1, Stream stream, int objectNumber)
+  {
+    stream.Write($"{objectNumber} 0 obj\n".ToUTF8());
+    stream.Write("<<\n".ToUTF8());
+    stream.Write("/Type /Font\n".ToUTF8());
+    stream.Write("/SubType /Type1\n".ToUTF8());
+
+    stream.Write(!string.IsNullOrWhiteSpace(pdfFontType1.Name)
+      ? $"/Name /{pdfFontType1.Name}\n".ToUTF8()
+      : "/Name /Default\n".ToUTF8());
+
+    stream.Write($"/BaseFont /{pdfFontType1.BaseFont}\n".ToUTF8());
+    stream.Write("/Encoding /WinAnsiEncoding\n".ToUTF8());
+    stream.Write(">>\nendobj\n".ToUTF8());
+    return new PdfExporterResults();
   }
 
   /*private static PdfExporterResults Export(this PdfEmbeddedImage embed, Stream stream, int objectNumber)
@@ -269,11 +295,9 @@ public static class BasicExporterExtension {
 
   private static PdfExporterResults Export(this PdfInlineImage image, Stream stream, int objectNumber)
   {
-    Console.WriteLine("HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     stream.Write("BI\n".ToUTF8());
     stream.Write($"\t/W {image.Width}\n".ToUTF8());
     stream.Write($"\t/H {image.Height}\n".ToUTF8());
-    // TODO this should be extracted to an extension function
     var colorSpaceString = image.ColorSpace switch
     {
       PdfColorSpace.DeviceGray => "G",
