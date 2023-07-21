@@ -34,6 +34,8 @@ public class GlyphPositioningTable : IFontTable
         {
             gpos.FeatureVariationsOffset = stream.ReadU16();
         }
+        
+        Console.WriteLine(JsonConvert.SerializeObject(gpos));
 
         if (gpos.ScriptListOffset != 0)
         {
@@ -44,19 +46,19 @@ public class GlyphPositioningTable : IFontTable
         if (gpos.FeatureListOffset != 0)
         {
             stream.Seek(startOfTable + gpos.FeatureListOffset, SeekOrigin.Begin);
-            gpos.FeatureListTable = FeatureListTable.Load(stream);
+            //gpos.FeatureListTable = FeatureListTable.Load(stream);
         }
         
         if (gpos.LookupListOffset != 0)
         {
             stream.Seek(startOfTable + gpos.LookupListOffset, SeekOrigin.Begin);
-            gpos.LookupListTable = LookupListTable.Load(stream);
+            //gpos.LookupListTable = LookupListTable.Load(stream);
         }
         
         if (gpos.FeatureVariationsOffset != 0)
         {
             stream.Seek(startOfTable + gpos.FeatureVariationsOffset, SeekOrigin.Begin);
-            gpos.FeatureVariationsTable = FeatureVariationsTable.Load(stream);
+            //gpos.FeatureVariationsTable = FeatureVariationsTable.Load(stream);
         }
         
         return gpos;
