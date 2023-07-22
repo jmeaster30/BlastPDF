@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BlastPDF.Builder.Resources;
+using BlastPDF.Builder.Resources.Font;
 
 namespace BlastPDF.Builder;
 

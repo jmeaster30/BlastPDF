@@ -1,6 +1,6 @@
 using System;
 
-namespace BlastPDF.Builder.Resources;
+namespace BlastPDF.Builder.Resources.Font;
 
 public enum PdfFontType
 {

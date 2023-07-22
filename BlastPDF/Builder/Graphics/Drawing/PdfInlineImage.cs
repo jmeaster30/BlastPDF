@@ -20,6 +20,11 @@ public class PdfInlineImage : PdfGraphicsObject
   public static PdfInlineImage FromFile(string filename, FileFormat format, PdfColorSpace colorSpace, PdfFilter[] filters)
   {
     var image = IImage.Decode(filename, format);
+    return FromImage(image, colorSpace, filters);
+  }
+  
+  public static PdfInlineImage FromImage(IImage image, PdfColorSpace colorSpace, PdfFilter[] filters)
+  {
     var result = new PdfInlineImage {
       Width = image.Width(),
       Height = image.Height(),
@@ -38,7 +43,7 @@ public class PdfInlineImage : PdfGraphicsObject
   }
 }
 
-public static class PdfImageExtensions
+public static class PdfInlineImageExtensions
 {
   public static PdfGraphicsObject InlineImage(this PdfGraphicsObject graphics, string filename, FileFormat format, PdfColorSpace colorSpace = PdfColorSpace.DeviceRGB, PdfFilter[] filters = null)
   {

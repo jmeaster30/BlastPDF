@@ -1,6 +1,4 @@
-using System.Collections.Generic;
-
-namespace BlastPDF.Builder.Resources;
+namespace BlastPDF.Builder.Resources.Font;
 
 public class PdfFontType1 : PdfFontResource
 {

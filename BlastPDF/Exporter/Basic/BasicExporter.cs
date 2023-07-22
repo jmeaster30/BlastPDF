@@ -7,6 +7,8 @@ using BlastPDF.Builder;
 using BlastPDF.Builder.Graphics;
 using BlastPDF.Builder.Graphics.Drawing;
 using BlastPDF.Builder.Resources;
+using BlastPDF.Builder.Resources.Font;
+using BlastPDF.Builder.Resources.Image;
 using BlastPDF.Filter;
 using BlastSharp.Lists;
 using SharperImage.Enumerators;
@@ -110,9 +112,16 @@ public static class BasicExporterExtension {
     List<(string, int)> x_objects = new();
     foreach (var res in page.Resources)
     {
+      var startOffset = stream.Position;
+      crossReferences.Add((nextStart, stream.Position));
       x_objects.Add((res.Key, nextStart));
       res.Value.Export(stream, nextStart);
-      nextStart += 1;
+      var endOffset = stream.Position;
+      crossReferences.Add((nextStart + 1, stream.Position));
+      stream.Write($"{nextStart + 1} 0 obj\n".ToUTF8());
+      stream.Write($"({endOffset - startOffset})\n".ToUTF8());
+      stream.Write("endobj\n\n".ToUTF8());
+      nextStart += 2;
     }
     // build page resource dictionary
     var pageResources = nextStart;
@@ -190,6 +199,7 @@ public static class BasicExporterExtension {
     return pdfObject switch
     {
       PdfGraphicsObject graphics => graphics.Export(stream, objectNumber),
+      PdfImageResource imageRes => imageRes.Export(stream, objectNumber),
       _ => throw new Exception("Unhandled subtype of PdfObject")
     };
   }
@@ -220,18 +230,50 @@ public static class BasicExporterExtension {
     return new PdfExporterResults();
   }
 
-  /*private static PdfExporterResults Export(this PdfEmbeddedImage embed, Stream stream, int objectNumber)
+  private static PdfExporterResults Export(this PdfImageResource image, Stream stream, int objectNumber)
   {
     stream.Write($"{objectNumber} 0 obj\n".ToUTF8());
     stream.Write("<<\n/Type /XObject\n/Subtype /Image\n".ToUTF8());
-    stream.Write($"/Width {embed.Width}\n/Height {embed.Height}".ToUTF8());
-    stream.Write($"/ColorSpace /{embed.ColorSpace}\n/BitsPerComponent {embed.BitsPerComponent}\n".ToUTF8());
-    stream.Write($"/Length {embed.ImageData.LongLength}\n".ToUTF8());
+    stream.Write($"/Width {image.Width}\n/Height {image.Height}\n".ToUTF8());
+    stream.Write($"/ColorSpace /{image.ColorSpace}\n/BitsPerComponent {image.BitsPerComponent}\n".ToUTF8());
+    var filterNames = image.Filters.Select(x => x switch
+    {
+      PdfFilter.Ascii85 => "/A85",
+      PdfFilter.AsciiHex => "/AHx",
+      PdfFilter.Lzw => "/LZW",
+      PdfFilter.RunLength => "/RL",
+      _ => throw new NotImplementedException()
+    }).Join(" ");
+    stream.Write($"/Length {objectNumber + 1} 0 R\n".ToUTF8());
+    stream.Write($"\t/F [{filterNames}]\n".ToUTF8());
     stream.Write(">>\nstream\n".ToUTF8());
-    stream.Write(embed.ImageData);
+    var imageData = image.ImageData.ToRowRankPixelEnumerable().SelectMany(p =>
+    {
+      switch (image.ColorSpace)
+      {
+        case PdfColorSpace.DeviceGray:
+          return new[] { (byte)(0.299 * p.Red + 0.587 * p.Green + 0.114 * p.Blue) };
+        case PdfColorSpace.DeviceRGB:
+          return new[] { p.Red, p.Green, p.Blue };
+        case PdfColorSpace.DeviceCMYK:
+          var rPrime = p.Red / 255.0;
+          var gPrime = p.Green / 255.0;
+          var bPrime = p.Blue / 255.0;
+          var k = 1 - Math.Max(rPrime, Math.Max(gPrime, bPrime));
+          var c = (1 - rPrime - k) / (1 - k);
+          var m = (1 - gPrime - k) / (1 - k);
+          var y = (1 - bPrime - k) / (1 - k);
+          return new[] { (byte)(c * 255), (byte)(m * 255), (byte)(y * 255), (byte)(k * 255) };
+        default:
+          throw new NotImplementedException();
+      }
+    }).ToList();
+    imageData = image.Filters.Reverse().Aggregate(imageData, (current, filter) => filter.Encode(current).ToList());
+
+    stream.Write(imageData.ToArray());
     stream.Write("\nendstream\nendobj\n".ToUTF8());
     return new PdfExporterResults();
-  }*/
+  }
 
   private static PdfExporterResults Export(this PdfGraphicsObject graphicsObject, Stream stream, int objectNumber) {
     // TODO I have a feeling this could still be better
@@ -256,6 +298,7 @@ public static class BasicExporterExtension {
       case PdfXObject xobj: return xobj.Export(stream, objectNumber);
       case PdfInlineImage image: return image.Export(stream, objectNumber);
       case PdfTextObject text: return text.Export(stream, objectNumber);
+      
     }
 
     foreach (var obj in graphicsObject.SubObjects) {

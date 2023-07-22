@@ -5,6 +5,8 @@ using BlastPDF.Builder;
 using BlastPDF.Builder.Graphics;
 using BlastPDF.Builder.Graphics.Drawing;
 using BlastPDF.Builder.Resources;
+using BlastPDF.Builder.Resources.Font;
+using BlastPDF.Builder.Resources.Image;
 using BlastPDF.Exporter.Basic;
 using BlastPDF.Filter;
 using BlastSharp.Dates;
@@ -42,10 +44,7 @@ public class PdfBuilderExample
                 .UseHelvetica()
                 .UseCourierBold()
                 .UseTimesNewRomanItalic()
-                //.AddGraphics(PdfGraphicsObject.Create()
-                //    .SetCMYK(0.0M, 0.0M, 1.0M, 0.0M)
-                //    .Rect(0, 0, 1000, 1000)
-                //    .Paint(PaintModeEnum.CloseFillStroke))
+                .UseImage("Cat", "../../../images/bmp/cat.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.AsciiHex, PdfFilter.Lzw})
                 .AddGraphics(PdfTextObject.Create()
                     .TextLeading(12)
                     .SetFont("Helvetica", 24)
@@ -87,27 +86,26 @@ public class PdfBuilderExample
                     .ShowText("too far")
                     .NextLineOffset(0, -6)
                     .ShowText("too far"))
-                /*.AddGraphics(PdfGraphicsObject.Create()
-                    .Translate(250, 702)
-                    .Scale(50.0M, 50.0M)
-                    .InlineImage("../../../images/bmp/w3c_home.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.ASCII85}))
-                .AddGraphics(PdfGraphicsObject.Create()
-                    .Translate(300, 702)
-                    .Scale(50.0M, 50.0M)
-                    .InlineImage("../../../images/bmp/w3c_home.bmp", FileFormat.BMP)) // ASCIIHex
-                .AddGraphics(PdfGraphicsObject.Create()
-                    .Translate(350, 702)
-                    .Scale(50.0M, 50.0M)
-                    .InlineImage("../../../images/bmp/w3c_home.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.LZW}))
-                .AddGraphics(PdfGraphicsObject.Create()
-                    .Translate(400, 702)
-                    .Scale(50.0M, 50.0M)
-                    .InlineImage("../../../images/bmp/w3c_home.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.ASCII85, PdfFilter.LZW}))
-                */
                 .AddGraphics(PdfGraphicsObject.Create()
                     .Translate(200, 200)
                     .Scale(600.0M, 600.0M)
-                    .InlineImage("../../../images/bmp/cat.bmp", FileFormat.BMP, PdfColorSpace.DeviceRGB, new []{PdfFilter.AsciiHex, PdfFilter.Lzw}))
+                    .Image("Cat")
+                    .ResetState()
+                    .Translate(250, 250)
+                    .Scale(500.0M, 500.0M)
+                    .Image("Cat")
+                    .ResetState()
+                    .Translate(300, 300)
+                    .Scale(400.0M, 400.0M)
+                    .Image("Cat")
+                    .ResetState()
+                    .Translate(350, 350)
+                    .Scale(300.0M, 300.0M)
+                    .Image("Cat")
+                    .ResetState()
+                    .Translate(400, 400)
+                    .Scale(200.0M, 200.0M)
+                    .Image("Cat"))
                 ).Save(fs);
 
         //if (File.Exists("template_test.pdf")) {
