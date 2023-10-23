@@ -1,4 +1,4 @@
-using BlastSharp.Streams;
+using MyLib.Streams;
 using Newtonsoft.Json;
 
 namespace BlastType.Internal.CharacterMapSubtables;

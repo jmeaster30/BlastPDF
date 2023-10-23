@@ -1,7 +1,7 @@
 ﻿using System.Text;
-using BlastSharp.Streams;
 using BlastType.Internal;
-using BlastType.Internal.GlyphDefinitionSubtables;
+using MyLib.Enumerables;
+using MyLib.Streams;
 
 namespace BlastType;
 
@@ -72,7 +72,7 @@ public class BlastFont
             // TODO table should be non-nullable if we can process all table tags
             IFontTable? table = record.TableTagString switch
             {
-                //"CFF " => 
+                "CFF " => CompactFontFormatTable.Load(fontFile),
                 "cmap" => CharacterMapTable.Load(fontFile),
                 "DSIG" => DigitalSignature.Load(fontFile),
                 "GDEF" => GlyphDefinitionTable.Load(fontFile),
@@ -89,9 +89,10 @@ public class BlastFont
 
             if (table == null)
             { 
+                Console.WriteLine("UNIMPLEMENTED");
                 fontFile.Seek(record.Offset, SeekOrigin.Begin);
                 var bytes = fontFile.ReadBytes((int)Math.Min(10, record.Length));
-                Console.WriteLine(string.Join(' ', bytes.Select(x => x.ToString("X2"))));
+                Console.WriteLine(bytes.Select(x => x.ToString("X2")).Join(" "));
                 continue;
             }
             Console.WriteLine("TABLE::");

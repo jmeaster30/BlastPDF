@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using BlastPDF.Builder;
 using BlastPDF.Filter;
-using BlastSharp.Lists;
 using BlastType;
 
 namespace ShowCase;
@@ -12,7 +11,7 @@ namespace ShowCase;
 public class Program {
   public static void Main(string[] args)
   {
-    PdfBuilderExample.Run("megatest.pdf");
+    //PdfBuilderExample.Run("megatest.pdf");
     //ImageParsingExample.Run("../../../images/qoi/dice.qoi");
     //ImageParsingExample.Run("../../../images/qoi/kodim10.qoi");
     //ImageParsingExample.Run("../../../images/qoi/kodim23.qoi");
@@ -22,7 +21,7 @@ public class Program {
     //ImageParsingExample.Run("../../../images/qoi/wikipedia_008.qoi");
     //ImageParsingExample.Run("../../../images/gif/bird.gif");
 
-    //BlastFont.Load("../../../../Samples/airtraveler.otf");
+    BlastFont.Load("../../../../Samples/airtraveler.otf");
   }
 }
 

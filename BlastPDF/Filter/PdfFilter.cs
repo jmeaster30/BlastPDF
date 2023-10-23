@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
-using BlastPDF.Filter;
 using BlastPDF.Filter.Implementations;
+using MyLib.Compression;
+using MyLib.Compression.Interface;
 
 namespace BlastPDF.Filter;
 
@@ -21,13 +22,13 @@ public enum PdfFilter
 
 public static class PdfFilterExtensions
 {
-    private static IFilterAlgorithm Get(this PdfFilter decodeType, IFilterParameters parameters)
+    private static ICompressionAlgorithm Get(this PdfFilter decodeType)
     {
         return decodeType switch
         {
-            PdfFilter.AsciiHex => new AsciiHex(),
-            PdfFilter.Ascii85 => new Ascii85(),
-            PdfFilter.Lzw => new Lzw(parameters as LzwParameters),
+            PdfFilter.AsciiHex => new PdfAsciiHex(),
+            PdfFilter.Ascii85 => new PdfAscii85(),
+            PdfFilter.Lzw => new Lzw(),
             PdfFilter.Flate => throw new NotImplementedException(),
             PdfFilter.RunLength => new RunLength(),
             PdfFilter.CCITTFax => throw new NotImplementedException(),
@@ -39,9 +40,9 @@ public static class PdfFilterExtensions
         };
     }
 
-    public static IEnumerable<byte> Encode(this PdfFilter filter, IEnumerable<byte> input, IFilterParameters parameters = null) =>
-        filter.Get(parameters).Encode(input);
+    public static IEnumerable<byte> Encode(this PdfFilter filter, IEnumerable<byte> input) =>
+        filter.Get().Encode(input);
     
-    public static IEnumerable<byte> Decode(this PdfFilter filter, IEnumerable<byte> input, IFilterParameters parameters = null) =>
-        filter.Get(parameters).Decode(input);
+    public static IEnumerable<byte> Decode(this PdfFilter filter, IEnumerable<byte> input) =>
+        filter.Get().Decode(input);
 }

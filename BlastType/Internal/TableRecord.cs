@@ -1,5 +1,5 @@
 using System.Text;
-using BlastSharp.Streams;
+using MyLib.Streams;
 
 namespace BlastType.Internal;
 

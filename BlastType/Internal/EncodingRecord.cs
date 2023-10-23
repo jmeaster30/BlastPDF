@@ -1,5 +1,5 @@
-using BlastSharp.Streams;
 using BlastType.Internal.CharacterMapSubtables;
+using MyLib.Streams;
 
 namespace BlastType.Internal;
 

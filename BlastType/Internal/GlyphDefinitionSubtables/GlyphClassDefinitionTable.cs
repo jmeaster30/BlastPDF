@@ -1,5 +1,4 @@
-using BlastSharp.Streams;
-using Newtonsoft.Json;
+using MyLib.Streams;
 
 namespace BlastType.Internal.GlyphDefinitionSubtables;
 

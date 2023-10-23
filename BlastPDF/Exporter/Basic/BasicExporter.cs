@@ -6,11 +6,10 @@ using BlastPDF.Exporter.Util;
 using BlastPDF.Builder;
 using BlastPDF.Builder.Graphics;
 using BlastPDF.Builder.Graphics.Drawing;
-using BlastPDF.Builder.Resources;
 using BlastPDF.Builder.Resources.Font;
 using BlastPDF.Builder.Resources.Image;
 using BlastPDF.Filter;
-using BlastSharp.Lists;
+using MyLib.Enumerables;
 using SharperImage.Enumerators;
 
 namespace BlastPDF.Exporter.Basic;

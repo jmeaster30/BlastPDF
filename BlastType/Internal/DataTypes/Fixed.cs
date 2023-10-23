@@ -1,4 +1,4 @@
-using BlastSharp.Lists;
+using MyLib.Enumerables;
 
 namespace BlastType.Internal.DataTypes;
 

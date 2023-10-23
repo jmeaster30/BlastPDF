@@ -1,5 +1,5 @@
-using BlastSharp.Streams;
 using BlastType.Internal.DataTypes;
+using MyLib.Streams;
 using Newtonsoft.Json;
 
 namespace BlastType.Internal;

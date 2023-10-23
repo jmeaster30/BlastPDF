@@ -1,5 +1,4 @@
 using System;
-using BlastSharp.Text;
 
 namespace BlastPDF.Builder;
 

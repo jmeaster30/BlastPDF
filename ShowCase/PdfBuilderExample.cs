@@ -4,12 +4,11 @@ using System.IO;
 using BlastPDF.Builder;
 using BlastPDF.Builder.Graphics;
 using BlastPDF.Builder.Graphics.Drawing;
-using BlastPDF.Builder.Resources;
 using BlastPDF.Builder.Resources.Font;
 using BlastPDF.Builder.Resources.Image;
 using BlastPDF.Exporter.Basic;
 using BlastPDF.Filter;
-using BlastSharp.Dates;
+using MyLib.DatesAndTimes;
 using SharperImage.Formats;
 
 namespace ShowCase;

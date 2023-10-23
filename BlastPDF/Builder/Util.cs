@@ -1,6 +1,8 @@
-namespace BlastSharp.Text;
+using System.Linq;
 
-public static class StringExtensions
+namespace BlastPDF.Builder;
+
+public static class Util
 {
     public static string EscapedString(this string input)
     {
