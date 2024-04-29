@@ -11,8 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlastPDF.Test", "BlastPDF.T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlastPDF.Template", "BlastPDF.Template\BlastPDF.Template.csproj", "{221C8A28-642A-447B-874D-0D09542F1A58}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlastType", "BlastType\BlastType.csproj", "{B12ED74F-00BA-4915-9157-13016E32C2BD}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -74,17 +72,5 @@ Global
 		{221C8A28-642A-447B-874D-0D09542F1A58}.Release|x64.Build.0 = Release|Any CPU
 		{221C8A28-642A-447B-874D-0D09542F1A58}.Release|x86.ActiveCfg = Release|Any CPU
 		{221C8A28-642A-447B-874D-0D09542F1A58}.Release|x86.Build.0 = Release|Any CPU
-		{B12ED74F-00BA-4915-9157-13016E32C2BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B12ED74F-00BA-4915-9157-13016E32C2BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B12ED74F-00BA-4915-9157-13016E32C2BD}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{B12ED74F-00BA-4915-9157-13016E32C2BD}.Debug|x64.Build.0 = Debug|Any CPU
-		{B12ED74F-00BA-4915-9157-13016E32C2BD}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{B12ED74F-00BA-4915-9157-13016E32C2BD}.Debug|x86.Build.0 = Debug|Any CPU
-		{B12ED74F-00BA-4915-9157-13016E32C2BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B12ED74F-00BA-4915-9157-13016E32C2BD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B12ED74F-00BA-4915-9157-13016E32C2BD}.Release|x64.ActiveCfg = Release|Any CPU
-		{B12ED74F-00BA-4915-9157-13016E32C2BD}.Release|x64.Build.0 = Release|Any CPU
-		{B12ED74F-00BA-4915-9157-13016E32C2BD}.Release|x86.ActiveCfg = Release|Any CPU
-		{B12ED74F-00BA-4915-9157-13016E32C2BD}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

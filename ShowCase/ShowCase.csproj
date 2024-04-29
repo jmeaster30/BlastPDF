@@ -5,7 +5,6 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\BlastType\BlastType.csproj" />
     <ProjectReference Include="..\BlastPDF.Template\BlastPDF.Template.csproj" OutputItemType="Analyzer" />
     <ProjectReference Include="..\BlastPDF\BlastPDF.csproj" />
   </ItemGroup>
